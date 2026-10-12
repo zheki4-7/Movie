@@ -4,15 +4,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.EpisodeResponse;
 import zhedron.movie.dto.response.request.EpisodeCreateRequest;
 import zhedron.movie.entity.Episode;
+import zhedron.movie.entity.Subtitle;
 import zhedron.movie.exceptions.EpisodeNotFoundException;
+import zhedron.movie.exceptions.SubtitleExistInEpisodeException;
+import zhedron.movie.exceptions.SubtitleNotFoundException;
 import zhedron.movie.mappers.EpisodeMapper;
 import zhedron.movie.repository.EpisodeRepository;
+import zhedron.movie.repository.SubtitleRepository;
 import zhedron.movie.services.EpisodeService;
+import zhedron.movie.services.SubtitleService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,13 +31,19 @@ import java.util.UUID;
 @Slf4j
 public class EpisodeServiceImpl implements EpisodeService {
     private final EpisodeRepository episodeRepository;
+    private final SubtitleRepository subtitleRepository;
+
     private final EpisodeMapper episodeMapper;
+
+    private final SubtitleService subtitleService;
 
     private final String DIRECTORY = "episode/";
 
-    public EpisodeServiceImpl(EpisodeRepository episodeRepository, EpisodeMapper episodeMapper) {
+    public EpisodeServiceImpl(EpisodeRepository episodeRepository, SubtitleRepository subtitleRepository, EpisodeMapper episodeMapper, SubtitleService subtitleService) {
         this.episodeRepository = episodeRepository;
+        this.subtitleRepository = subtitleRepository;
         this.episodeMapper = episodeMapper;
+        this.subtitleService = subtitleService;
     }
 
     @Override
@@ -81,5 +93,64 @@ public class EpisodeServiceImpl implements EpisodeService {
         } catch (IOException e) {
             log.error("Failed to delete file: {}", e.getMessage());
         }
+    }
+
+    @Override
+    @Caching(
+            cacheable = {
+                    @Cacheable(
+                            value = "subtitles", key = "#subtitleId"
+                    ),
+                    @Cacheable(
+                            value = "episodes", key = "#episodeId"
+                    )
+            }
+    )
+    public EpisodeResponse addSubtitleToEpisode(long episodeId, long subtitleId) {
+        Episode episode = episodeRepository.findById(episodeId).orElseThrow(() -> new EpisodeNotFoundException("Episode not found with " + episodeId));
+
+        Subtitle subtitle = subtitleService.findById(subtitleId);
+
+        if (episode.getSubtitles().contains(subtitle)) {
+            throw new SubtitleExistInEpisodeException("Subtitle exists in Episode");
+        }
+
+        subtitle.setReleased(true);
+        subtitle.setEpisode(episode);
+
+        subtitleRepository.save(subtitle);
+
+        episode.getSubtitles().add(subtitle);
+
+        Episode addedSubtitle = episodeRepository.save(episode);
+
+        return episodeMapper.toEpisodeResponse(addedSubtitle);
+    }
+
+    @Override
+    @Caching(
+            cacheable = {
+                    @Cacheable(
+                            value = "subtitles", key = "#subtitleId"
+                    ),
+                    @Cacheable(
+                            value = "episodes", key = "#episodeId"
+                    )
+            }
+    )
+    public EpisodeResponse removeSubtitleFromEpisode(long episodeId, long subtitleId) {
+        Episode episode = episodeRepository.findById(episodeId).orElseThrow(() -> new EpisodeNotFoundException("Episode not found with " + episodeId));
+
+        Subtitle subtitle = subtitleService.findById(subtitleId);
+
+        if (!episode.getSubtitles().contains(subtitle)) {
+            throw new SubtitleNotFoundException("Episode subtitle not found in Episode");
+        }
+
+        episode.getSubtitles().remove(subtitle);
+
+        Episode removedSubtitle = episodeRepository.save(episode);
+
+        return episodeMapper.toEpisodeResponse(removedSubtitle);
     }
 }

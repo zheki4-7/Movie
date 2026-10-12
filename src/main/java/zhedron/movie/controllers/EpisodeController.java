@@ -151,4 +151,25 @@ public class EpisodeController {
             return ResponseEntity.badRequest().body(new MessageResponse("Failed to load file"));
         }
     }
+
+    @PostMapping("/add/subtitle/{subtitleId}/{episodeId}")
+    @Operation(summary = "Add subtitle to an episode", description = "Links an existing subtitle to an episode and marks it as released.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Subtitle added", content = @Content(schema = @Schema(implementation = EpisodeResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Episode or subtitle not found"),
+            @ApiResponse(responseCode = "400", description = "Subtitle already linked to episode")
+    })
+    public EpisodeResponse addSubtitle(@PathVariable long subtitleId, @PathVariable long episodeId) {
+        return episodeService.addSubtitleToEpisode(episodeId, subtitleId);
+    }
+
+    @DeleteMapping("/remove/subtitle/{subtitleId}/{episodeId}")
+    @Operation(summary = "Remove subtitle from an episode", description = "Unlinks an existing subtitle from an episode.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Subtitle removed", content = @Content(schema = @Schema(implementation = EpisodeResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Episode, subtitle, or association not found")
+    })
+    public EpisodeResponse removeSubtitle(@PathVariable long subtitleId, @PathVariable long episodeId) {
+        return episodeService.removeSubtitleFromEpisode(episodeId, subtitleId);
+    }
 }

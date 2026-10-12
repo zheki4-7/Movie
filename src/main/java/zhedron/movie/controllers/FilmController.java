@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.FilmResponse;
 import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.services.FilmService;
+import zhedron.movie.services.SubtitleService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -27,9 +28,11 @@ import java.nio.file.Paths;
 @Tag(name = "Films", description = "Endpoints for uploading, streaming, and deleting film video files")
 public class FilmController {
     private final FilmService filmService;
+    private final SubtitleService subtitleService;
 
-    public FilmController(FilmService filmService) {
+    public FilmController(FilmService filmService, SubtitleService subtitleService) {
         this.filmService = filmService;
+        this.subtitleService = subtitleService;
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -148,5 +151,26 @@ public class FilmController {
         } catch (IOException e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Failed to load video file"));
         }
+    }
+
+    @PostMapping("/add/subtitle/{subtitleId}/{filmId}")
+    @Operation(summary = "Add subtitle to a film", description = "Links an existing subtitle to a film and marks it as released.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Subtitle added", content = @Content(schema = @Schema(implementation = FilmResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Film or subtitle not found"),
+            @ApiResponse(responseCode = "400", description = "Subtitle already linked to film")
+    })
+    public FilmResponse addSubtitle(@PathVariable long subtitleId, @PathVariable long filmId) {
+        return filmService.addSubtitleToFilm(subtitleId, filmId);
+    }
+
+    @DeleteMapping("/remove/subtitle/{subtitleId}/{filmId}")
+    @Operation(summary = "Remove subtitle from a film", description = "Unlinks an existing subtitle from a film.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Subtitle removed", content = @Content(schema = @Schema(implementation = FilmResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Film, subtitle, or association not found")
+    })
+    public FilmResponse removeSubtitle(@PathVariable long subtitleId, @PathVariable long filmId) {
+        return filmService.removeSubtitleFromFilm(subtitleId, filmId);
     }
 }

@@ -61,7 +61,7 @@ class SeasonServiceImplTest {
         season.setEpisodes(new ArrayList<>());
         Episode episode = new Episode();
         episode.setId(12L);
-        SeasonResponse expectedResponse = new SeasonResponse(4L, List.of(new EpisodeResponse(12L, null, 0, null)), 1);
+        SeasonResponse expectedResponse = new SeasonResponse(4L, List.of(new EpisodeResponse(12L, null, 0, null, List.of())), 1);
         when(seasonRepository.findById(4L)).thenReturn(Optional.of(season));
         when(episodeRepository.findById(12L)).thenReturn(Optional.of(episode));
         when(seasonMapper.toSeasonResponse(season)).thenReturn(expectedResponse);

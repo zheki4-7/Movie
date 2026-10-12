@@ -12,4 +12,8 @@ public interface EpisodeService {
     EpisodeResponse findById(long id);
 
     void deleteById(long id);
+
+    EpisodeResponse addSubtitleToEpisode(long episodeId, long fileId);
+
+    EpisodeResponse removeSubtitleFromEpisode(long episodeId, long fileId);
 }

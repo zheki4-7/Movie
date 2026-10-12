@@ -11,9 +11,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import zhedron.movie.dto.response.EpisodeResponse;
 import zhedron.movie.dto.response.request.EpisodeCreateRequest;
 import zhedron.movie.entity.Episode;
+import zhedron.movie.entity.Subtitle;
 import zhedron.movie.exceptions.EpisodeNotFoundException;
 import zhedron.movie.mappers.EpisodeMapper;
 import zhedron.movie.repository.EpisodeRepository;
+import zhedron.movie.repository.SubtitleRepository;
+import zhedron.movie.services.SubtitleService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,7 +38,11 @@ class EpisodeServiceImplTest {
     @Mock
     private EpisodeRepository episodeRepository;
     @Mock
+    private SubtitleRepository subtitleRepository;
+    @Mock
     private EpisodeMapper episodeMapper;
+    @Mock
+    private SubtitleService subtitleService;
     @InjectMocks
     private EpisodeServiceImpl episodeService;
 
@@ -58,7 +65,7 @@ class EpisodeServiceImplTest {
         savedEpisode.setEpisodeUrl("saved-episode.mp4");
         savedEpisode.setEpisodeNumber(4);
         savedEpisode.setContentType("video/mp4");
-        EpisodeResponse expectedResponse = new EpisodeResponse(10L, "saved-episode.mp4", 4, "video/mp4");
+        EpisodeResponse expectedResponse = new EpisodeResponse(10L, "saved-episode.mp4", 4, "video/mp4", List.of());
         when(episodeRepository.save(any(Episode.class))).thenReturn(savedEpisode);
         when(episodeMapper.toEpisodeResponse(savedEpisode)).thenReturn(expectedResponse);
 
@@ -79,7 +86,7 @@ class EpisodeServiceImplTest {
     void findByIdReturnsMappedEpisode() {
         Episode episode = new Episode();
         episode.setId(8L);
-        EpisodeResponse expectedResponse = new EpisodeResponse(8L, "episode.mp4", 2, "video/mp4");
+        EpisodeResponse expectedResponse = new EpisodeResponse(8L, "episode.mp4", 2, "video/mp4", List.of());
         when(episodeRepository.findById(8L)).thenReturn(Optional.of(episode));
         when(episodeMapper.toEpisodeResponse(episode)).thenReturn(expectedResponse);
 
@@ -107,5 +114,38 @@ class EpisodeServiceImplTest {
 
         verify(episodeRepository).deleteById(12L);
         assertFalse(Files.exists(videoPath));
+    }
+
+    @Test
+    void addSubtitleLinksAndReleasesSubtitle() {
+        Episode episode = new Episode();
+        episode.setId(7L);
+        episode.setSubtitles(new ArrayList<>());
+        Subtitle subtitle = new Subtitle();
+        subtitle.setId(3);
+        EpisodeResponse expected = new EpisodeResponse(7L, "episode.mp4", 2, "video/mp4", List.of());
+        when(episodeRepository.findById(7L)).thenReturn(Optional.of(episode));
+        when(subtitleService.findById(3L)).thenReturn(subtitle);
+        when(episodeRepository.save(episode)).thenReturn(episode);
+        when(episodeMapper.toEpisodeResponse(episode)).thenReturn(expected);
+
+        assertEquals(expected, episodeService.addSubtitleToEpisode(7L, 3L));
+
+        assertTrue(subtitle.isReleased());
+        assertEquals(episode, subtitle.getEpisode());
+        assertTrue(episode.getSubtitles().contains(subtitle));
+        verify(subtitleRepository).save(subtitle);
+    }
+
+    @Test
+    void removeSubtitleRejectsMissingAssociation() {
+        Episode episode = new Episode();
+        episode.setId(7L);
+        episode.setSubtitles(new ArrayList<>());
+        when(episodeRepository.findById(7L)).thenReturn(Optional.of(episode));
+        when(subtitleService.findById(3L)).thenReturn(new Subtitle());
+
+        assertThrows(zhedron.movie.exceptions.SubtitleNotFoundException.class,
+                () -> episodeService.removeSubtitleFromEpisode(7L, 3L));
     }
 }

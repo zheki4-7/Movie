@@ -16,11 +16,14 @@ import zhedron.movie.dto.response.request.EpisodeCreateRequest;
 import zhedron.movie.repository.UserRepository;
 import zhedron.movie.services.EpisodeService;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,7 +46,7 @@ class EpisodeControllerTest {
         MockMultipartFile video = new MockMultipartFile("video", "episode.mp4", "video/mp4", "video".getBytes());
         MockMultipartFile requestPart = new MockMultipartFile(
                 "episodeCreateRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
-        when(episodeService.uploadEpisode(any(), any())).thenReturn(new EpisodeResponse(7L, "episode.mp4", 2, "video/mp4"));
+        when(episodeService.uploadEpisode(any(), any())).thenReturn(new EpisodeResponse(7L, "episode.mp4", 2, "video/mp4", List.of()));
 
         mockMvc.perform(multipart("/api/episode/upload").file(video).file(requestPart))
                 .andExpect(status().isCreated())
@@ -98,5 +101,82 @@ class EpisodeControllerTest {
                 .andExpect(jsonPath("$.message").value("Episode deleted successfully"));
 
         verify(episodeService).deleteById(7L);
+    }
+
+    @Test
+    void deleteEpisodeRejectsAnonymousUser() throws Exception {
+        mockMvc.perform(delete("/api/episode/delete/7"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "USER")
+    void deleteEpisodeRejectsNonAdminUser() throws Exception {
+        mockMvc.perform(delete("/api/episode/delete/7"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void addSubtitleToEpisodeReturnsUpdatedEpisode() throws Exception {
+        when(episodeService.addSubtitleToEpisode(7L, 3L))
+                .thenReturn(new EpisodeResponse(7L, "episode.mp4", 2, "video/mp4", List.of()));
+
+        mockMvc.perform(post("/api/episode/add/subtitle/3/7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(7));
+
+        verify(episodeService).addSubtitleToEpisode(7L, 3L);
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void removeSubtitleFromEpisodeReturnsUpdatedEpisode() throws Exception {
+        when(episodeService.removeSubtitleFromEpisode(7L, 3L))
+                .thenReturn(new EpisodeResponse(7L, "episode.mp4", 2, "video/mp4", List.of()));
+
+        mockMvc.perform(delete("/api/episode/remove/subtitle/3/7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(7));
+
+        verify(episodeService).removeSubtitleFromEpisode(7L, 3L);
+    }
+
+    @Test
+    void addSubtitleToEpisodeRejectsAnonymousUser() throws Exception {
+        mockMvc.perform(post("/api/episode/add/subtitle/3/7"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "USER")
+    void addSubtitleToEpisodeRejectsNonAdminUser() throws Exception {
+        mockMvc.perform(post("/api/episode/add/subtitle/3/7"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void removeSubtitleFromEpisodeRejectsAnonymousUser() throws Exception {
+        mockMvc.perform(delete("/api/episode/remove/subtitle/3/7"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "USER")
+    void removeSubtitleFromEpisodeRejectsNonAdminUser() throws Exception {
+        mockMvc.perform(delete("/api/episode/remove/subtitle/3/7"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void uploadEpisodeRejectsMissingVideo() throws Exception {
+        EpisodeCreateRequest request = new EpisodeCreateRequest();
+        request.setEpisodeNumber(2);
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "episodeCreateRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
+        mockMvc.perform(multipart("/api/episode/upload").file(requestPart))
+                .andExpect(status().isBadRequest());
     }
 }

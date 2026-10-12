@@ -11,4 +11,8 @@ public interface FilmService {
     void deleteById(long id);
 
     FilmResponse findById(long id);
+
+    FilmResponse addSubtitleToFilm(long subtitleId, long filmId);
+
+    FilmResponse removeSubtitleFromFilm(long subtitleId, long filmId);
 }

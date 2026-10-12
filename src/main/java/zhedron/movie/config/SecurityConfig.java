@@ -44,7 +44,9 @@ public class SecurityConfig {
             "/api/film/{id:\\d+}",
             "/api/actor/{actorId:\\d+}",
             "/api/actor/stream/{actorId:\\d+}",
-            "/api/comment/{id:\\d+}/{mediaContentId:\\d+}"
+            "/api/comment/{id:\\d+}/{mediaContentId:\\d+}",
+            "/api/subtitle/{id:\\d+}",
+            "/api/subtitle/datasrt/**"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {
@@ -55,7 +57,13 @@ public class SecurityConfig {
             "/api/user/change-role/**",
             "/api/actor/create",
             "/api/actor/delete/**",
-            "/api/actor/update/**"
+            "/api/actor/update/**",
+            "/api/subtitle/delete/**",
+            "/api/subtitle/upload",
+            "/api/film/add/subtitle/{subtitleId:\\d+}/{filmId:\\d+}",
+            "/api/film/remove/subtitle/{subtitleId:\\d+}/{filmId:\\d+}",
+            "/api/episode/add/subtitle/{subtitleId:\\d+}/{episodeId:\\d+}",
+            "/api/episode/remove/subtitle/{subtitleId:\\d+}/{episodeId:\\d+}"
     };
 
     private static final String[] AUTHENTICATED_ENDPOINTS = {
