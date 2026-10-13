@@ -119,13 +119,15 @@ public class CommentServiceImpl implements CommentService {
             throw new AccessDeniedException("You are not allowed to edit this comment");
         }
 
+        String oldText = comment.getText();
+
         comment.setEdited(true);
         comment.setText(commentRequest.getText());
         comment.setUpdatedAt(LocalDateTime.now());
 
         Comment editedComment = commentRepository.save(comment);
 
-        log.info("Old comment {{}} changed to new comment {{}}", comment.getText(), editedComment.getText());
+        log.info("Old comment {{}} changed to new comment {{}}", oldText, editedComment.getText());
 
         return commentMapper.toCommentResponse(editedComment);
     }
