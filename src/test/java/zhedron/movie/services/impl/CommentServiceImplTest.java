@@ -12,6 +12,7 @@ import zhedron.movie.dto.response.request.CommentRequest;
 import zhedron.movie.entity.Comment;
 import zhedron.movie.entity.MediaContent;
 import zhedron.movie.entity.User;
+import zhedron.movie.exceptions.AccessDeniedException;
 import zhedron.movie.exceptions.CommentDeleteAccessDeniedException;
 import zhedron.movie.exceptions.CommentNotFoundException;
 import zhedron.movie.mappers.CommentMapper;
@@ -118,9 +119,13 @@ class CommentServiceImplTest {
     void editCommentMarksCommentEdited() {
         CommentRequest request = new CommentRequest();
         request.setText("Updated");
+        User owner = new User();
+        owner.setId(4L);
+        when(userService.getCurrentUser()).thenReturn(owner);
         Comment comment = new Comment();
         comment.setId(14L);
         comment.setText("Original");
+        comment.setUser(owner);
         CommentResponse expectedResponse = new CommentResponse(14L, "Updated", null, null, null, true);
         when(commentRepository.findById(14L)).thenReturn(Optional.of(comment));
         when(commentRepository.save(comment)).thenReturn(comment);
@@ -132,5 +137,33 @@ class CommentServiceImplTest {
         assertEquals("Updated", comment.getText());
         assertNotNull(comment.getUpdatedAt());
         assertSame(expectedResponse, response);
+    }
+
+    @Test
+    void editCommentRejectsDifferentCurrentUser() {
+        User owner = new User();
+        owner.setId(4L);
+        User currentUser = new User();
+        currentUser.setId(9L);
+        Comment comment = new Comment();
+        comment.setId(14L);
+        comment.setUser(owner);
+        CommentRequest request = new CommentRequest();
+        request.setText("Updated");
+        when(userService.getCurrentUser()).thenReturn(currentUser);
+        when(commentRepository.findById(14L)).thenReturn(Optional.of(comment));
+
+        assertThrows(AccessDeniedException.class, () -> commentService.editComment(request, 14L));
+
+        verify(commentRepository, never()).save(any(Comment.class));
+    }
+
+    @Test
+    void editCommentThrowsWhenCommentIsMissing() {
+        when(userService.getCurrentUser()).thenReturn(new User());
+        when(commentRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThrows(CommentNotFoundException.class,
+                () -> commentService.editComment(new CommentRequest(), 404L));
     }
 }

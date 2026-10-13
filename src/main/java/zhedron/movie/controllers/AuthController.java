@@ -67,7 +67,7 @@ public class AuthController {
                             schema = @Schema(type = "string", example = "accessToken=eyJhbGci...; Path=/; Max-Age=3600; HttpOnly")
                     ),
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(
                                     name = "Successful Response",
                                     value = "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"}"
@@ -78,7 +78,7 @@ public class AuthController {
                     responseCode = "400",
                     description = "Validation error in request body",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = {
                                     @ExampleObject(
                                             name = "Missing Email Error",

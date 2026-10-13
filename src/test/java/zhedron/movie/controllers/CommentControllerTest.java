@@ -144,4 +144,30 @@ class CommentControllerTest {
 
         verify(commentService, never()).editComment(any(CommentRequest.class), org.mockito.ArgumentMatchers.eq(3L));
     }
+
+    @Test
+    void editCommentRejectsAnonymousUser() throws Exception {
+        CommentRequest request = new CommentRequest();
+        request.setText("Updated");
+
+        mockMvc.perform(put("/api/comment/edit/3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser
+    void editCommentReturnsNotFoundWhenCommentIsMissing() throws Exception {
+        CommentRequest request = new CommentRequest();
+        request.setText("Updated");
+        when(commentService.editComment(any(CommentRequest.class), org.mockito.ArgumentMatchers.eq(404L)))
+                .thenThrow(new zhedron.movie.exceptions.CommentNotFoundException("Comment not found with 404"));
+
+        mockMvc.perform(put("/api/comment/edit/404")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Comment not found with 404"));
+    }
 }

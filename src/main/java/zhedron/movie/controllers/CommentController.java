@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -41,7 +42,7 @@ public class CommentController {
                     responseCode = "201",
                     description = "Comment created successfully",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CommentResponse.class)
                     )
             ),
@@ -49,7 +50,7 @@ public class CommentController {
                     responseCode = "400",
                     description = "Validation error in request payload",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(type = "object", implementation = Map.class),
                             examples = @ExampleObject(
                                     name = "Validation Error",
@@ -61,11 +62,22 @@ public class CommentController {
                     responseCode = "404",
                     description = "Media content not found",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(type = "object", implementation = Map.class),
                             examples = @ExampleObject(
                                     name = "Media Not Found",
                                     value = "{\"message\": \"Media content not found with 42\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - User is not the author of the comment",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples = @ExampleObject(
+                                    name = "Forbidden",
+                                    value = "{\"message\": \"You are not allowed to edit this comment\"}"
                             )
                     )
             )
@@ -94,7 +106,7 @@ public class CommentController {
                     responseCode = "200",
                     description = "Comment retrieved successfully",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CommentResponse.class)
                     )
             ),
@@ -102,7 +114,7 @@ public class CommentController {
                     responseCode = "404",
                     description = "Comment or Media Content not found",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = {
                                     @ExampleObject(
                                             name = "Comment Not Found",
@@ -130,7 +142,7 @@ public class CommentController {
                     responseCode = "200",
                     description = "Comment deleted successfully",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class),
                             examples = @ExampleObject(
                                     name = "Success Message",
@@ -142,7 +154,7 @@ public class CommentController {
                     responseCode = "403",
                     description = "Access denied — User is not the author of the comment",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(
                                     name = "Forbidden",
                                     value = "{\"message\": \"You are not allowed to delete this comment\"}"
@@ -153,7 +165,7 @@ public class CommentController {
                     responseCode = "404",
                     description = "Comment not found",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(
                                     name = "Not Found",
                                     value = "{\"message\": \"Comment not found with 1\"}"
@@ -177,7 +189,7 @@ public class CommentController {
                     responseCode = "200",
                     description = "Comment updated successfully",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CommentResponse.class)
                     )
             ),
@@ -185,7 +197,7 @@ public class CommentController {
                     responseCode = "400",
                     description = "Validation error in request payload",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(
                                     name = "Validation Error",
                                     value = "{\"message\": \"Write your comment, text must not be empty\"}"
@@ -196,10 +208,21 @@ public class CommentController {
                     responseCode = "404",
                     description = "Comment not found",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(
                                     name = "Not Found",
                                     value = "{\"message\": \"Comment not found with 1\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - User is not the author of the comment",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples = @ExampleObject(
+                                    name = "Forbidden",
+                                    value = "{\"message\": \"You are not allowed to edit this comment\"}"
                             )
                     )
             )

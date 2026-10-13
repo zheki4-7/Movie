@@ -12,6 +12,7 @@ import zhedron.movie.dto.response.request.CommentRequest;
 import zhedron.movie.entity.Comment;
 import zhedron.movie.entity.MediaContent;
 import zhedron.movie.entity.User;
+import zhedron.movie.exceptions.AccessDeniedException;
 import zhedron.movie.exceptions.CommentDeleteAccessDeniedException;
 import zhedron.movie.exceptions.CommentNotFoundException;
 import zhedron.movie.mappers.CommentMapper;
@@ -110,7 +111,13 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @CacheEvict(value = "comments", key = "#id")
     public CommentResponse editComment(CommentRequest commentRequest, long id) {
+        User currentUser = userService.getCurrentUser();
+
         Comment comment = commentRepository.findById(id).orElseThrow(() -> new CommentNotFoundException("Comment not found with " + id));
+
+        if (!comment.getUser().equals(currentUser)) {
+            throw new AccessDeniedException("You are not allowed to edit this comment");
+        }
 
         comment.setEdited(true);
         comment.setText(commentRequest.getText());
