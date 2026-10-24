@@ -7,9 +7,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import zhedron.movie.dto.response.FavoriteResponse;
 import zhedron.movie.dto.response.MessageResponse;
@@ -17,6 +20,9 @@ import zhedron.movie.dto.response.request.FavoriteRequest;
 import zhedron.movie.entity.Favorite;
 import zhedron.movie.mappers.FavoriteMapper;
 import zhedron.movie.services.FavoriteService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/favorite")
@@ -47,7 +53,7 @@ public class FavoriteController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "A favorite with the same name already exists for the authenticated user",
+                    description = "The request is invalid or a favorite with the same name already exists for the authenticated user",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class),
@@ -59,7 +65,17 @@ public class FavoriteController {
             ),
             @ApiResponse(responseCode = "401", description = "Authentication required")
     })
-    public ResponseEntity<FavoriteResponse> createFavorite(@RequestBody FavoriteRequest favoriteRequest) {
+    public ResponseEntity<?> createFavorite(@Valid @RequestBody FavoriteRequest favoriteRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errorMap = new HashMap<>();
+
+                errorMap.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errorMap, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(favoriteService.create(favoriteRequest));
     }
 
@@ -67,10 +83,21 @@ public class FavoriteController {
     @Operation(summary = "Update a favorite list", description = "Updates the name of a favorite list owned by the authenticated user.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Favorite list updated", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FavoriteResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Favorite name is missing or blank", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"message\": \"Name must not be empty\"}"))),
             @ApiResponse(responseCode = "404", description = "Favorite list not found or is not owned by the authenticated user", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"message\": \"Favorite not found\"}"))),
             @ApiResponse(responseCode = "401", description = "Authentication required")
     })
-    public ResponseEntity<FavoriteResponse> updateFavorite(@PathVariable long id, @RequestBody FavoriteRequest favoriteRequest) {
+    public ResponseEntity<?> updateFavorite(@PathVariable long id, @Valid @RequestBody FavoriteRequest favoriteRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errorMap = new HashMap<>();
+
+                errorMap.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errorMap, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         return ResponseEntity.ok(favoriteService.update(favoriteRequest, id));
     }
 

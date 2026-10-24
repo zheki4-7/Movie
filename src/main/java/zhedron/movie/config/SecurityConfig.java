@@ -31,7 +31,8 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/actuator"
+            "/actuator",
+            "/api/reset/**"
     };
 
     private static final String[] PUBLIC_GET_ENDPOINTS = {

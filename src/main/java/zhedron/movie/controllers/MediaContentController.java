@@ -8,11 +8,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -27,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +73,17 @@ public class MediaContentController {
                     )
             )
     })
-    public ResponseEntity<?> createMediaContent(@RequestPart MediaContentRequest mediaContentRequest, @RequestPart List<MultipartFile> images) throws IOException {
+    public ResponseEntity<?> createMediaContent(@Valid @RequestPart MediaContentRequest mediaContentRequest, BindingResult bindingResult, @RequestPart List<MultipartFile> images) throws IOException {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errorMap = new HashMap<>();
+
+                errorMap.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errorMap, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         for (MultipartFile image : images) {
             if (image == null) {
                 return ResponseEntity.badRequest().body(new MessageResponse("Image is required"));
@@ -101,7 +115,7 @@ public class MediaContentController {
                     description = "Media content not found",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Media Content not found with id 1\"}")
+                        examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Media Content not found with id 1\"}")
                     )
             )
     })
@@ -130,6 +144,15 @@ public class MediaContentController {
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Media Content not found with id 1\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Title or description is missing or blank",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = @ExampleObject(name = "Invalid Request", value = "{\"message\": \"Write title, title must not be empty\"}")
                     )
             )
     })
@@ -333,7 +356,17 @@ public class MediaContentController {
                     )
             )
     })
-    public ResponseEntity<MediaContentResponse> updateMediaContent(@PathVariable long id, @RequestBody MediaContentRequest updateContentMedia) {
+    public ResponseEntity<?> updateMediaContent(@PathVariable long id, @Valid @RequestBody MediaContentRequest updateContentMedia, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errorMap = new HashMap<>();
+
+                errorMap.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errorMap, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         return ResponseEntity.ok(mediaContentService.updateMediaContent(updateContentMedia, id));
     }
 

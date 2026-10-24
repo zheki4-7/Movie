@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -85,6 +87,22 @@ class MediaContentControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ADMIN")
+    void createMediaContentReturnsValidationMessageForBlankTitle() throws Exception {
+        MediaContentRequest request = mediaContentRequest();
+        request.setTitle("");
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "mediaContentRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+        MockMultipartFile image = new MockMultipartFile("images", "cover.jpg", "image/jpeg", "image".getBytes());
+
+        mockMvc.perform(multipart("/api/mediacontent/create").file(requestPart).file(image))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Write title, title must not be empty"));
+
+        verify(mediaContentService, never()).createMediaContent(any(MediaContentRequest.class), any());
+    }
+
+    @Test
     @WithMockUser(authorities = "USER")
     void getMediaContentByIdReturnsServiceResponse() throws Exception {
         when(mediaContentService.findById(8L)).thenReturn(response(8L, Status.PUBLIC));
@@ -133,6 +151,21 @@ class MediaContentControllerTest {
                 .andExpect(jsonPath("$.message").value("Media Content has been deleted"));
 
         verify(mediaContentService).deleteById(8L);
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void updateMediaContentReturnsValidationMessageForBlankTitle() throws Exception {
+        MediaContentRequest request = mediaContentRequest();
+        request.setTitle("");
+
+        mockMvc.perform(put("/api/mediacontent/update/8")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Write title, title must not be empty"));
+
+        verify(mediaContentService, never()).updateMediaContent(any(MediaContentRequest.class), eq(8L));
     }
 
     @Test

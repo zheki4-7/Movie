@@ -40,7 +40,15 @@ public class RedisConfig {
         cacheConfigurations.put("comments", config.serializeValuesWith(
                 RedisSerializationContext.SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(CommentResponse.class))
         ));
-
+        cacheConfigurations.put("actors", config.serializeValuesWith(
+                RedisSerializationContext.SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(ActorResponse.class))
+        ));
+        cacheConfigurations.put("subtitles", config.serializeValuesWith(
+                RedisSerializationContext.SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(SubtitleResponse.class))
+        ));
+        cacheConfigurations.put("favorites", config.serializeValuesWith(
+                RedisSerializationContext.SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(FavoriteResponse.class))
+        ));
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(config).
                 withInitialCacheConfigurations(cacheConfigurations).
