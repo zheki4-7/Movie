@@ -8,6 +8,4 @@ import zhedron.movie.entity.Episode;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface EpisodeMapper {
     EpisodeResponse toEpisodeResponse(Episode episode);
-
-    Episode toEpisode(EpisodeResponse episodeResponse);
 }

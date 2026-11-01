@@ -125,6 +125,25 @@ class ActorServiceImplTest {
         assertThrows(ActorNotFoundException.class, () -> actorService.findById(404L));
     }
 
+    @Test
+    void uploadAvatarStoresPhotoAndContentType() throws Exception {
+        Actor existingActor = actor(12L);
+        MultipartFile image = new MockMultipartFile("image", "new.png", "image/png", "image".getBytes());
+        ActorResponse expectedResponse = actorResponse(12L);
+        when(actorRepository.findById(12L)).thenReturn(Optional.of(existingActor));
+        when(actorRepository.save(existingActor)).thenReturn(existingActor);
+        when(actorMapper.toActorResponse(existingActor)).thenReturn(expectedResponse);
+
+        ActorResponse response = actorService.uploadAvatarById(12L, image);
+
+        assertEquals(List.of("Ada_new.png"), existingActor.getPhotos());
+        assertEquals(List.of("image/png"), existingActor.getContentTypes());
+        assertTrue(Files.exists(Path.of("images", "Ada_new.png")));
+        assertSame(expectedResponse, response);
+        verify(actorRepository).save(existingActor);
+        Files.deleteIfExists(Path.of("images", "Ada_new.png"));
+    }
+
     private static ActorRequest actorRequest() {
         ActorRequest request = new ActorRequest();
         request.setName("Ada");

@@ -1,6 +1,7 @@
 package zhedron.movie.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.tika.Tika;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -17,6 +18,7 @@ import zhedron.movie.repository.UserRepository;
 import zhedron.movie.services.EpisodeService;
 
 import java.util.List;
+import java.io.InputStream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -40,18 +42,22 @@ class EpisodeControllerTest {
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    void uploadEpisodeAcceptsMp4AndRequestPart() throws Exception {
+    void uploadEpisodeAcceptsValidMp4AndRequestPart() throws Exception {
         EpisodeCreateRequest request = new EpisodeCreateRequest();
         request.setEpisodeNumber(2);
-        MockMultipartFile video = new MockMultipartFile("video", "episode.mp4", "video/mp4", "video".getBytes());
+        MockMultipartFile video = new MockMultipartFile("video", "episode.mp4", "video/mp4", mp4Bytes());
         MockMultipartFile requestPart = new MockMultipartFile(
                 "episodeCreateRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
-        when(episodeService.uploadEpisode(any(), any())).thenReturn(new EpisodeResponse(7L, "episode.mp4", 2, "video/mp4", List.of()));
+        when(episodeService.uploadEpisode(any(), any()))
+                .thenReturn(new EpisodeResponse(7L, "episode.mp4", 2, "video/mp4", List.of()));
 
-        mockMvc.perform(multipart("/api/episode/upload").file(video).file(requestPart))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(7))
-                .andExpect(jsonPath("$.episodeNumber").value(2));
+        try (var ignored = org.mockito.Mockito.mockConstruction(Tika.class,
+                (mock, context) -> when(mock.detect(any(InputStream.class))).thenReturn("video/mp4"))) {
+            mockMvc.perform(multipart("/api/episode/upload").file(video).file(requestPart))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(7))
+                    .andExpect(jsonPath("$.episodeNumber").value(2));
+        }
     }
 
     @Test
@@ -178,5 +184,9 @@ class EpisodeControllerTest {
 
         mockMvc.perform(multipart("/api/episode/upload").file(requestPart))
                 .andExpect(status().isBadRequest());
+    }
+
+    private static byte[] mp4Bytes() {
+        return java.util.Base64.getDecoder().decode("AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDE=");
     }
 }

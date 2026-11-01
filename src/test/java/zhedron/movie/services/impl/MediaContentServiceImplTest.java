@@ -6,6 +6,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import zhedron.movie.dto.response.MediaContentResponse;
@@ -25,10 +27,13 @@ import zhedron.movie.services.UserService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -50,6 +55,26 @@ class MediaContentServiceImplTest {
     private MediaContentServiceImpl mediaContentService;
 
     @Test
+    void uploadAvatarStoresCoverArtAndSavesMediaContent() throws Exception {
+        MediaContent mediaContent = mediaContent(5L, Status.PRIVATE);
+        mediaContent.setCoverArts(new ArrayList<>());
+        MultipartFile image = new MockMultipartFile("image", "cover.png", "image/png", "image".getBytes());
+        MediaContentResponse expectedResponse = response(5L, Status.PRIVATE);
+        when(mediaContentRepository.findById(5L)).thenReturn(Optional.of(mediaContent));
+        when(mediaContentRepository.save(mediaContent)).thenReturn(mediaContent);
+        when(mediaContentMapper.toMediaContentResponse(mediaContent)).thenReturn(expectedResponse);
+
+        MediaContentResponse response = mediaContentService.uploadAvatarById(5L, image);
+
+        assertEquals(1, mediaContent.getCoverArts().size());
+        assertTrue(mediaContent.getCoverArts().get(0).endsWith("_cover.png"));
+        assertTrue(Files.exists(Path.of("cover_art", mediaContent.getCoverArts().get(0))));
+        assertSame(expectedResponse, response);
+        verify(mediaContentRepository).save(mediaContent);
+        Files.deleteIfExists(Path.of("cover_art", mediaContent.getCoverArts().get(0)));
+    }
+
+    @Test
     void findByIdThrowsWhenMediaContentDoesNotExist() {
         when(mediaContentRepository.findById(404L)).thenReturn(Optional.empty());
 
@@ -59,11 +84,9 @@ class MediaContentServiceImplTest {
     @Test
     void changeVisibilitySavesMediaContentWithRequestedStatus() {
         MediaContent mediaContent = mediaContent(5L, Status.PRIVATE);
-        MediaContentResponse foundResponse = response(5L, Status.PRIVATE);
         MediaContentResponse publicResponse = response(5L, Status.PUBLIC);
         when(mediaContentRepository.findById(5L)).thenReturn(Optional.of(mediaContent));
-        when(mediaContentMapper.toMediaContentResponse(mediaContent)).thenReturn(foundResponse, publicResponse);
-        when(mediaContentMapper.toMediaContent(foundResponse)).thenReturn(mediaContent);
+        when(mediaContentMapper.toMediaContentResponse(mediaContent)).thenReturn(publicResponse);
         when(mediaContentRepository.save(mediaContent)).thenReturn(mediaContent);
 
         MediaContentResponse response = mediaContentService.changeVisibility(Status.PUBLIC, 5L);
@@ -93,7 +116,7 @@ class MediaContentServiceImplTest {
         when(mediaContentRepository.findById(7L)).thenReturn(Optional.of(mediaContent));
         when(filmRepository.findById(2L)).thenReturn(Optional.of(requestedFilm));
 
-        assertThrows(FilmInMediaNotContainException.class, () -> mediaContentService.deleteFilmFromMediaContent(7L, 2L));
+        assertThrows(FilmInMediaNotContainException.class, () -> mediaContentService.removeFilmFromMediaContent(7L, 2L));
     }
 
     @Test

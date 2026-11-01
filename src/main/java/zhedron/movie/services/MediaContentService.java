@@ -23,9 +23,9 @@ public interface MediaContentService {
 
     MediaContentResponse addSeasonToMediaContent(long mediaContentId, long seasonId);
 
-    void deleteFilmFromMediaContent(long mediaContentId, long filmId);
+    void removeFilmFromMediaContent(long mediaContentId, long filmId);
 
-    void deleteSeasonFromMediaContent(long mediaContentId, long seasonId);
+    void removeSeasonFromMediaContent(long mediaContentId, long seasonId);
 
     MediaContentResponse updateMediaContent(MediaContentRequest  mediaContentUpdateRequest, long id);
 
@@ -36,4 +36,6 @@ public interface MediaContentService {
     MediaContentResponse addActorToMediaContent(long mediaContentId, long actorId);
 
     MediaContentResponse removeActorFromMediaContent(long mediaContentId, long actorId);
+
+    MediaContentResponse uploadAvatarById(long id, MultipartFile image) throws IOException;
 }

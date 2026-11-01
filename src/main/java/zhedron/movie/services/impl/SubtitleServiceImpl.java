@@ -56,7 +56,7 @@ public class SubtitleServiceImpl implements SubtitleService {
 
         String filePath = file.getOriginalFilename();
 
-        Path path = Paths.get(DIRECTORY).resolve(filePath).normalize();
+        Path path = directory.resolve(filePath).normalize();
 
         Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 

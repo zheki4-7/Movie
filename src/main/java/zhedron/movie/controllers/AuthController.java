@@ -43,6 +43,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
+
     private final AuthenticationManager authenticationManager;
 
     public AuthController(JwtService jwtService, UserService userService, RefreshTokenService refreshTokenService, AuthenticationManager authenticationManager) {

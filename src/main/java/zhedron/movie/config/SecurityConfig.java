@@ -59,6 +59,7 @@ public class SecurityConfig {
             "/api/actor/create",
             "/api/actor/delete/**",
             "/api/actor/update/**",
+            "/api/actor/upload/**",
             "/api/subtitle/delete/**",
             "/api/subtitle/upload",
             "/api/film/add/subtitle/{subtitleId:\\d+}/{filmId:\\d+}",

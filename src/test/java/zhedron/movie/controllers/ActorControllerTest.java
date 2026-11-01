@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Base64;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -60,7 +61,7 @@ class ActorControllerTest {
     void createActorAcceptsMultipartRequest() throws Exception {
         MockMultipartFile requestPart = new MockMultipartFile(
                 "actorRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(actorRequest()));
-        MockMultipartFile image = new MockMultipartFile("images", "portrait.jpg", "image/jpeg", "image".getBytes());
+        MockMultipartFile image = new MockMultipartFile("images", "portrait.png", "image/png", pngBytes());
         when(actorService.createActor(any(ActorRequest.class), any())).thenReturn(actorResponse(5L));
 
         mockMvc.perform(multipart("/api/actor/create").file(requestPart).file(image))
@@ -130,6 +131,32 @@ class ActorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.gender").value("FEMALE"));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void uploadPhotoReturnsUpdatedActor() throws Exception {
+        when(actorService.uploadAvatarById(org.mockito.ArgumentMatchers.eq(5L), any())).thenReturn(actorResponse(5L));
+
+        MockMultipartFile image = new MockMultipartFile("image", "portrait.png", "image/png", pngBytes());
+
+        mockMvc.perform(multipart("/api/actor/upload/5").file(image))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void uploadPhotoRejectsEmptyImage() throws Exception {
+        MockMultipartFile image = new MockMultipartFile("image", "portrait.png", "image/png", new byte[0]);
+
+        mockMvc.perform(multipart("/api/actor/upload/5").file(image))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Upload image"));
+    }
+
+    private static byte[] pngBytes() {
+        return Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=");
     }
 
     private static ActorRequest actorRequest() {

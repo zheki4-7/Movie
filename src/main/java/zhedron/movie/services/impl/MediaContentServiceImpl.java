@@ -85,7 +85,7 @@ public class MediaContentServiceImpl implements MediaContentService {
 
             contentTypes.add(image.getContentType());
 
-            Path imageFile = Paths.get(DIRECTORY).resolve(fileName).normalize();
+            Path imageFile = path.resolve(fileName).normalize();
 
             Files.copy(image.getInputStream(), imageFile, StandardCopyOption.REPLACE_EXISTING);
         }
@@ -157,9 +157,7 @@ public class MediaContentServiceImpl implements MediaContentService {
     @Override
     @Cacheable(value = "mediaContents", key = "#id")
     public MediaContentResponse changeVisibility(Status status, long id) {
-        MediaContentResponse mediaContentResponse = findById(id);
-
-        MediaContent mediaContent = mediaContentMapper.toMediaContent(mediaContentResponse);
+        MediaContent mediaContent = mediaContentRepository.findById(id).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with id " + id));
 
         mediaContent.setStatus(status);
 
@@ -239,7 +237,7 @@ public class MediaContentServiceImpl implements MediaContentService {
             @Cacheable(value = "mediaContents", key = "#mediaContentId"),
             @Cacheable(value = "films", key = "#filmId")
     })
-    public void deleteFilmFromMediaContent(long mediaContentId, long filmId) {
+    public void removeFilmFromMediaContent(long mediaContentId, long filmId) {
         MediaContent mediaContent = mediaContentRepository.findById(mediaContentId).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with id " + mediaContentId));
 
         Film film = filmRepository.findById(filmId).orElseThrow(() -> new FilmNotFoundException("Film not found with id " + filmId));
@@ -261,7 +259,7 @@ public class MediaContentServiceImpl implements MediaContentService {
             @Cacheable(value = "mediaContents", key = "#mediaContentId"),
             @Cacheable(value = "seasons", key = "#seasonId")
     })
-    public void deleteSeasonFromMediaContent(long mediaContentId, long seasonId) {
+    public void removeSeasonFromMediaContent(long mediaContentId, long seasonId) {
         MediaContent mediaContent = mediaContentRepository.findById(mediaContentId).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with id " + mediaContentId));
 
         Season season = seasonRepository.findById(seasonId).orElseThrow(() -> new SeasonNotFoundException("Season not found with id " + seasonId));
@@ -400,5 +398,22 @@ public class MediaContentServiceImpl implements MediaContentService {
         MediaContent deletedActorToMediaContent = mediaContentRepository.save(mediaContent);
 
         return mediaContentMapper.toMediaContentResponse(deletedActorToMediaContent);
+    }
+
+    @Override
+    public MediaContentResponse uploadAvatarById(long id, MultipartFile image) throws IOException {
+        MediaContent mediaContentFound = mediaContentRepository.findById(id).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with " + id));
+
+        String fileName = UUID.randomUUID().toString() + "_" + image.getOriginalFilename();
+
+        Path path = Paths.get(DIRECTORY).resolve(fileName).normalize();
+
+        Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+        mediaContentFound.getCoverArts().add(fileName);
+
+        MediaContent uploadedMedia = mediaContentRepository.save(mediaContentFound);
+
+        return mediaContentMapper.toMediaContentResponse(uploadedMedia);
     }
 }

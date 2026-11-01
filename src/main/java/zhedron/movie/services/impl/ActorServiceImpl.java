@@ -29,7 +29,7 @@ public class ActorServiceImpl implements ActorService {
 
     private final ActorMapper actorMapper;
 
-    private final String DIRECTORY = "images";
+    private final String DIRECTORY = "images/";
 
     public ActorServiceImpl(ActorRepository actorRepository, ActorMapper actorMapper) {
         this.actorRepository = actorRepository;
@@ -120,5 +120,24 @@ public class ActorServiceImpl implements ActorService {
     @Cacheable(value = "actors", key = "#id")
     public Actor findById(long id) {
         return actorRepository.findById(id).orElseThrow(() -> new ActorNotFoundException("Actor not found with " + id));
+    }
+
+    @Override
+    @Cacheable(value = "actors", key = "#id")
+    public ActorResponse uploadAvatarById(long id, MultipartFile image) throws IOException {
+        Actor actor = findById(id);
+
+        String fileName = actor.getName() + "_" + image.getOriginalFilename();
+
+        Path path = Paths.get(DIRECTORY).resolve(fileName).normalize();
+
+        actor.getPhotos().add(fileName);
+        actor.getContentTypes().add(image.getContentType());
+
+        Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+        Actor uploadedActor = actorRepository.save(actor);
+
+        return actorMapper.toActorResponse(uploadedActor);
     }
 }

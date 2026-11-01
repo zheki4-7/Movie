@@ -16,4 +16,6 @@ public interface ActorService {
     void deleteById(long id);
 
     Actor findById(long id);
+
+    ActorResponse uploadAvatarById(long id, MultipartFile image) throws IOException;
 }

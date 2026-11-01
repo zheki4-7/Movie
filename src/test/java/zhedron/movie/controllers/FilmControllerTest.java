@@ -1,5 +1,6 @@
 package zhedron.movie.controllers;
 
+import org.apache.tika.Tika;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -12,9 +13,9 @@ import zhedron.movie.config.SecurityConfig;
 import zhedron.movie.dto.response.FilmResponse;
 import zhedron.movie.repository.UserRepository;
 import zhedron.movie.services.FilmService;
-import zhedron.movie.services.SubtitleService;
 
 import java.util.List;
+import java.io.InputStream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -33,20 +34,23 @@ class FilmControllerTest {
     @MockitoBean
     private FilmService filmService;
     @MockitoBean
-    private SubtitleService subtitleService;
-    @MockitoBean
     private UserRepository userRepository;
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    void uploadFilmAcceptsMp4() throws Exception {
-        MockMultipartFile video = new MockMultipartFile("video", "film.mp4", "video/mp4", "video".getBytes());
-        when(filmService.uploadFilm(any())).thenReturn(new FilmResponse(6L, "film.mp4", "video/mp4", List.of()));
+    void uploadFilmAcceptsValidMp4() throws Exception {
+        MockMultipartFile video = new MockMultipartFile("video", "film.mp4", "video/mp4", mp4Bytes());
 
-        mockMvc.perform(multipart("/api/film/upload").file(video))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(6))
-                .andExpect(jsonPath("$.contentType").value("video/mp4"));
+        when(filmService.uploadFilm(any()))
+                .thenReturn(new FilmResponse(6L, "film.mp4", "video/mp4", List.of()));
+
+        try (var ignored = org.mockito.Mockito.mockConstruction(Tika.class,
+                (mock, context) -> when(mock.detect(any(InputStream.class))).thenReturn("video/mp4"))) {
+            mockMvc.perform(multipart("/api/film/upload").file(video))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(6))
+                    .andExpect(jsonPath("$.contentType").value("video/mp4"));
+        }
     }
 
     @Test
@@ -61,7 +65,7 @@ class FilmControllerTest {
 
     @Test
     void uploadFilmRejectsAnonymousUser() throws Exception {
-        MockMultipartFile video = new MockMultipartFile("video", "film.mp4", "video/mp4", "video".getBytes());
+        MockMultipartFile video = new MockMultipartFile("video", "film.mp4", "video/mp4", mp4Bytes());
 
         mockMvc.perform(multipart("/api/film/upload").file(video))
                 .andExpect(status().isForbidden());
@@ -156,5 +160,9 @@ class FilmControllerTest {
     void uploadFilmRejectsMissingVideo() throws Exception {
         mockMvc.perform(multipart("/api/film/upload"))
                 .andExpect(status().isBadRequest());
+    }
+
+    private static byte[] mp4Bytes() {
+        return java.util.Base64.getDecoder().decode("AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDE=");
     }
 }

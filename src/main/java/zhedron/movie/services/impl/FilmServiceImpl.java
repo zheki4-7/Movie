@@ -62,7 +62,7 @@ public class FilmServiceImpl implements FilmService {
 
         String fileName = UUID.randomUUID().toString() + "_" + video.getOriginalFilename();
 
-        Path videoFile = Paths.get(DIRECTORY).resolve(fileName).normalize();
+        Path videoFile = path.resolve(fileName).normalize();
 
         Files.copy(video.getInputStream(), videoFile, StandardCopyOption.REPLACE_EXISTING);
 
@@ -81,7 +81,7 @@ public class FilmServiceImpl implements FilmService {
 
         MediaContent mediaContent = mediaContentRepository.findByFilm(film);
 
-        if (mediaContent != null && mediaContent.getFilm() != null) {
+        if (mediaContent != null) {
             mediaContent.setFilm(null);
             mediaContent.setDuration(0L);
         }

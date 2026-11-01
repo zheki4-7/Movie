@@ -83,7 +83,7 @@ public class FavoriteController {
     @Operation(summary = "Update a favorite list", description = "Updates the name of a favorite list owned by the authenticated user.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Favorite list updated", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FavoriteResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Favorite name is missing or blank", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"message\": \"Name must not be empty\"}"))),
+            @ApiResponse(responseCode = "400", description = "Favorite name is missing or blank", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = Map.class), examples = @ExampleObject(value = "{\"message\": \"Name must not be empty\"}"))),
             @ApiResponse(responseCode = "404", description = "Favorite list not found or is not owned by the authenticated user", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"message\": \"Favorite not found\"}"))),
             @ApiResponse(responseCode = "401", description = "Authentication required")
     })

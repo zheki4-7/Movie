@@ -4,11 +4,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import zhedron.movie.dto.response.MediaContentResponse;
+import zhedron.movie.entity.Actor;
 import zhedron.movie.entity.MediaContent;
 
 import java.util.List;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, imports = List.class, uses =  {ActorMapper.class})
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, imports = {List.class, Actor.class}, uses =  {ActorMapper.class})
 public interface MediaContentMapper {
     @Mapping(
             target = "actors",
@@ -18,7 +19,7 @@ public interface MediaContentMapper {
 
     @Mapping(
             target = "actors",
-            expression = "java(mediaContentResponse.actors() == null ? null : mediaContentResponse.actors().stream().map(s -> new zhedron.movie.entity.Actor()).toList())"
+            expression = "java(mediaContentResponse.actors() == null ? null : mediaContentResponse.actors().stream().map(s -> new Actor()).toList())"
     )
     MediaContent toMediaContent(MediaContentResponse mediaContentResponse);
 

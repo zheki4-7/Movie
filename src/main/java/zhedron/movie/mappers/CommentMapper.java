@@ -5,15 +5,7 @@ import org.mapstruct.MappingConstants;
 import zhedron.movie.dto.response.CommentResponse;
 import zhedron.movie.entity.Comment;
 
-import java.util.List;
-
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CommentMapper {
     CommentResponse toCommentResponse(Comment comment);
-
-    Comment toComment(CommentResponse commentResponse);
-
-    List<CommentResponse> toCommentResponseList(List<Comment> comments);
-
-    List<Comment> toCommentList(List<CommentResponse> commentResponseList);
 }

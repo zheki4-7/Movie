@@ -8,11 +8,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.apache.tika.Tika;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.ActorResponse;
@@ -25,7 +29,9 @@ import zhedron.movie.services.ActorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/actor")
@@ -72,11 +78,27 @@ public class ActorController {
                     )
             )
     })
-    public ResponseEntity<?> createActor(@RequestPart ActorRequest actorRequest, @RequestPart List<MultipartFile> images) throws IOException {
+    public ResponseEntity<?> createActor(@Valid @RequestPart ActorRequest actorRequest, BindingResult bindingResult, @RequestPart List<MultipartFile> images) throws IOException {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errorMap = new HashMap<>();
+
+                errorMap.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errorMap, HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        Tika tika = new Tika();
+
         for (MultipartFile image : images) {
-            if (image.isEmpty()) {
+            if (image == null || image.isEmpty()) {
                 return ResponseEntity.badRequest().body(new MessageResponse("Upload image file"));
-            } else if (!image.getContentType().equals("image/jpeg") && !image.getContentType().equals("image/png")) {
+            }
+
+            String contentType = tika.detect(image.getInputStream());
+
+            if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
                 return ResponseEntity.badRequest().body(new MessageResponse("Invalid image type"));
             }
         }
@@ -116,7 +138,7 @@ public class ActorController {
     @GetMapping("/stream/{actorId}")
     @Operation(
             summary = "Stream actor photo",
-            description = "Streams one actor photo by zero-based photo index."
+            description = "Streams one actor photo by its one-based photo index."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -140,7 +162,7 @@ public class ActorController {
                     )
             )
     })
-    public ResponseEntity<?> streamPhotos(@PathVariable long actorId, @RequestParam int size) {
+    public ResponseEntity<?> streamPhotos(@PathVariable long actorId, @RequestParam(defaultValue = "1") int size) {
         try {
             Actor actor = actorService.findById(actorId);
 
@@ -217,5 +239,35 @@ public class ActorController {
     })
     public ResponseEntity<ActorResponse> updateActorById(@PathVariable long actorId, @RequestBody ActorRequest actorRequest) {
         return ResponseEntity.ok(actorService.updateActor(actorRequest, actorId));
+    }
+
+    @PostMapping("/upload/{id}")
+    @Operation(
+            summary = "Upload an actor photo",
+            description = "Appends a JPEG or PNG photo to an existing actor profile."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Photo uploaded successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ActorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Missing, empty, or unsupported image",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Actor not found")
+    })
+    public ResponseEntity<?> uploadPhoto(@RequestPart MultipartFile image, @PathVariable long id) throws IOException {
+        if (image == null || image.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Upload image"));
+        }
+
+        Tika tika = new Tika();
+
+        String contentType = tika.detect(image.getInputStream());
+
+        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Upload image file with image format"));
+        }
+
+        return ResponseEntity.ok(actorService.uploadAvatarById(id, image));
     }
 }

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.tika.Tika;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.FilmResponse;
 import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.services.FilmService;
-import zhedron.movie.services.SubtitleService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -28,11 +28,9 @@ import java.nio.file.Paths;
 @Tag(name = "Films", description = "Endpoints for uploading, streaming, and deleting film video files")
 public class FilmController {
     private final FilmService filmService;
-    private final SubtitleService subtitleService;
 
-    public FilmController(FilmService filmService, SubtitleService subtitleService) {
+    public FilmController(FilmService filmService) {
         this.filmService = filmService;
-        this.subtitleService = subtitleService;
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -63,12 +61,19 @@ public class FilmController {
                     )
             )
     })
-    public ResponseEntity<?> uploadFilm(@RequestPart MultipartFile video) throws IOException {
+    public ResponseEntity<?> uploadFilm(
+            @RequestPart MultipartFile video) throws IOException {
         if (video == null) {
             return ResponseEntity.badRequest().body(new MessageResponse("Video is required"));
         } else if (video.isEmpty()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Upload video file"));
-        } else if (!video.getContentType().equals("video/mp4")) {
+        }
+
+        Tika tika = new Tika();
+
+        String contentType = tika.detect(video.getInputStream());
+
+        if (!contentType.equals("video/mp4")) {
             return ResponseEntity.badRequest().body(new MessageResponse("Upload video file with mp4 format"));
         }
 

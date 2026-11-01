@@ -172,7 +172,7 @@ public class SeasonController {
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class),
-                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Episode has been deleted from Season\"}")
+                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Episode has been removed from Season\"}")
                     )
             ),
             @ApiResponse(
@@ -188,9 +188,9 @@ public class SeasonController {
                     )
             )
     })
-    public ResponseEntity<MessageResponse> deleteEpisodeFromSeason(@RequestParam long seasonId, @RequestParam long episodeId) {
-        seasonService.deleteEpisodeFromSeason(seasonId, episodeId);
+    public ResponseEntity<MessageResponse> removeEpisodeFromSeason(@RequestParam long seasonId, @RequestParam long episodeId) {
+        seasonService.removeEpisodeFromSeason(seasonId, episodeId);
 
-        return ResponseEntity.ok(new MessageResponse("Episode has been deleted from Season"));
+        return ResponseEntity.ok(new MessageResponse("Episode has been removed from Season"));
     }
 }

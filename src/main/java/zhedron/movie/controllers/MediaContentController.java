@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.apache.tika.Tika;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -85,12 +86,18 @@ public class MediaContentController {
         }
 
         for (MultipartFile image : images) {
-            if (image == null) {
+            if (image == null || image.isEmpty()) {
                 return ResponseEntity.badRequest().body(new MessageResponse("Image is required"));
-            } else if (!image.getContentType().equals("image/jpeg") && !image.getContentType().equals("image/png")) {
-                return ResponseEntity.badRequest().body(new MessageResponse("Invalid content type"));
             } else if (image.isEmpty()) {
                 return ResponseEntity.badRequest().body(new MessageResponse("Upload image file"));
+            }
+
+            Tika tika = new Tika();
+
+            String contentType = tika.detect(image.getInputStream());
+
+            if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+                return ResponseEntity.badRequest().body(new MessageResponse("Invalid content type"));
             }
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(mediaContentService.createMediaContent(mediaContentRequest, images));
@@ -99,7 +106,7 @@ public class MediaContentController {
     @GetMapping("/{id}")
     @Operation(
             summary = "Get media content by ID",
-            description = "Retrieves details for a specific media content entry and dynamically recalculates duration if linked to episodes."
+            description = "Retrieves details for a specific media content entry."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -185,7 +192,7 @@ public class MediaContentController {
                     )
             )
     })
-    public ResponseEntity<MediaContentResponse> changeMediaContentRole(@PathVariable long id, @RequestParam Status status) {
+    public ResponseEntity<MediaContentResponse> changeMediaContentVisibility(@PathVariable long id, @RequestParam Status status) {
         return ResponseEntity.ok(mediaContentService.changeVisibility(status, id));
     }
 
@@ -205,10 +212,10 @@ public class MediaContentController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Conflict — Media content already contains a film or seasons",
+                    description = "Conflict — Media content already contains a film",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            examples = @ExampleObject(name = "Conflict", value = "{\"message\": \"Episodes/Film already exists in Media Content\"}")
+                            examples = @ExampleObject(name = "Conflict", value = "{\"message\": \"Film already exists in Media Content\"}")
                     )
             ),
             @ApiResponse(
@@ -243,10 +250,10 @@ public class MediaContentController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Conflict — Media content already contains a film or seasons",
+                    description = "Conflict — Media content already contains a season",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            examples = @ExampleObject(name = "Conflict", value = "{\"message\": \"Episodes/Film already exists in Media Content\"}")
+                            examples = @ExampleObject(name = "Conflict", value = "{\"message\": \"Season already exists in Media Content\"}")
                     )
             ),
             @ApiResponse(
@@ -277,7 +284,7 @@ public class MediaContentController {
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class),
-                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Film has been deleted from Media Content\"}")
+                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Film has been removed from Media Content\"}")
                     )
             ),
             @ApiResponse(
@@ -293,10 +300,10 @@ public class MediaContentController {
                     )
             )
     })
-    public ResponseEntity<MessageResponse> deleteFilmFromMediaContent(@RequestParam long mediaContentId, @RequestParam long filmId) {
-        mediaContentService.deleteFilmFromMediaContent(mediaContentId, filmId);
+    public ResponseEntity<MessageResponse> removeFilmFromMediaContent(@RequestParam long mediaContentId, @RequestParam long filmId) {
+        mediaContentService.removeFilmFromMediaContent(mediaContentId, filmId);
 
-        return ResponseEntity.ok(new MessageResponse("Film has been deleted from Media Content"));
+        return ResponseEntity.ok(new MessageResponse("Film has been removed from Media Content"));
     }
 
     @DeleteMapping("/season/delete")
@@ -311,7 +318,7 @@ public class MediaContentController {
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class),
-                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Season has been deleted from Media Content\"}")
+                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Season has been removed from Media Content\"}")
                     )
             ),
             @ApiResponse(
@@ -327,10 +334,10 @@ public class MediaContentController {
                     )
             )
     })
-    public ResponseEntity<MessageResponse> deleteSeasonFromMediaContent(@RequestParam long mediaContentId, @RequestParam long seasonId) {
-        mediaContentService.deleteSeasonFromMediaContent(mediaContentId, seasonId);
+    public ResponseEntity<MessageResponse> removeSeasonFromMediaContent(@RequestParam long mediaContentId, @RequestParam long seasonId) {
+        mediaContentService.removeSeasonFromMediaContent(mediaContentId, seasonId);
 
-        return ResponseEntity.ok(new MessageResponse("Season has been deleted from Media Content"));
+        return ResponseEntity.ok(new MessageResponse("Season has been removed from Media Content"));
     }
 
     @PutMapping("/update/{id}")
@@ -353,6 +360,22 @@ public class MediaContentController {
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Media Content not found with id 1\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication is required to update media content"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid media content fields",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "Invalid Title", value = "{\"message\": \"Write title\"}"),
+                                    @ExampleObject(name = "Invalid Description", value = "{\"message\": \"Write description\"}")
+                            }
                     )
             )
     })
@@ -475,7 +498,7 @@ public class MediaContentController {
     @GetMapping("/stream/photo/{id}")
     @Operation(
             summary = "Stream media content cover art",
-            description = "Streams the selected cover-art image for a media content entry by its zero-based cover-art index."
+            description = "Streams the selected cover-art image for a media content entry by its one-based cover-art index."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -512,5 +535,35 @@ public class MediaContentController {
         } catch (IndexOutOfBoundsException | IOException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("Not found image"));
         }
+    }
+
+    @PostMapping("/upload/{id}")
+    @Operation(
+            summary = "Upload media content cover art",
+            description = "Appends a JPEG or PNG cover image to an existing media content entry."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cover art uploaded successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MediaContentResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Missing, empty, or unsupported image",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Media content not found")
+    })
+    public ResponseEntity<?> uploadAvatar(@RequestPart MultipartFile image, @PathVariable long id) throws IOException {
+        if (image == null || image.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Upload image"));
+        }
+
+        Tika tika = new Tika();
+
+        String contentType = tika.detect(image.getInputStream());
+
+        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Upload image file with image format"));
+        }
+
+        return ResponseEntity.ok(mediaContentService.uploadAvatarById(id, image));
     }
 }

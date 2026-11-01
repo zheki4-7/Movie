@@ -83,7 +83,7 @@ class SeasonServiceImplTest {
         when(seasonRepository.findById(1L)).thenReturn(Optional.of(season));
         when(episodeRepository.findById(5L)).thenReturn(Optional.of(episode));
 
-        assertThrows(EpisodeInSeasonNotContainException.class, () -> seasonService.deleteEpisodeFromSeason(1L, 5L));
+        assertThrows(EpisodeInSeasonNotContainException.class, () -> seasonService.removeEpisodeFromSeason(1L, 5L));
     }
 
     @Test

@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -105,7 +106,7 @@ class SubtitleServiceImplTest {
         Files.writeString(file, "1\r\n00:00:00,000 --> 00:00:01,000\r\nHello\r\nworld\r\n\r\n2\r\n00:00:02,000 --> 00:00:03,000\r\nSecond");
         uploadedFile = file;
 
-        List<java.util.Map<String, Object>> cues = subtitleService.getDataFromSrtFile(Path.of("parse-test.srt"));
+        List<Map<String, Object>> cues = subtitleService.getDataFromSrtFile(Path.of("parse-test.srt"));
 
         assertEquals(2, cues.size());
         assertEquals("Hello world", cues.get(0).get("text"));

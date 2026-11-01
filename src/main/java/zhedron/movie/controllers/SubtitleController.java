@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.tika.Tika;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +55,7 @@ public class SubtitleController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @Operation(summary = "Delete a subtitle", description = "Deletes a subtitle record by ID. The stored SRT file is not removed by this operation.")
+    @Operation(summary = "Delete a subtitle", description = "Deletes a subtitle record by ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Subtitle deleted", content = @Content(schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "Subtitle not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -79,7 +80,13 @@ public class SubtitleController {
     public ResponseEntity<?> uploadFile(@RequestPart MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Upload file"));
-        } else if (!file.getContentType().equals("application/x-subrip")) {
+        }
+
+        Tika tika = new Tika();
+
+        String contentType = tika.detect(file.getInputStream());
+
+        if (!contentType.equals("application/x-subrip")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Upload srt file"));
         }
 
@@ -94,7 +101,7 @@ public class SubtitleController {
             @ApiResponse(responseCode = "500", description = "SRT file could not be parsed", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     examples = @ExampleObject(value = "{\"message\": \"Failed to read file\"}")))
     })
-    public List<Map<String, Object>> getDataSrt(@PathVariable int filmId) {
+    public List<Map<String, Object>> getDataSrtFilm(@PathVariable int filmId) {
         Subtitle subtitle = subtitleRepository.findByFilmId(filmId);
 
         return subtitleService.getDataFromSrtFile(Path.of(subtitle.getSrtName()));
@@ -108,7 +115,7 @@ public class SubtitleController {
             @ApiResponse(responseCode = "500", description = "SRT file could not be parsed", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     examples = @ExampleObject(value = "{\"message\": \"Failed to read file\"}")))
     })
-    public List<Map<String, Object>> getDataEpisode(@PathVariable int episodeId) {
+    public List<Map<String, Object>> getDataSrtEpisode(@PathVariable int episodeId) {
         Subtitle subtitle = subtitleRepository.findByEpisodeId(episodeId);
 
         return subtitleService.getDataFromSrtFile(Path.of(subtitle.getSrtName()));

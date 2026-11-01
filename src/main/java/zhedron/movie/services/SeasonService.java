@@ -12,5 +12,5 @@ public interface SeasonService {
 
     SeasonResponse addEpisodeToSeason(long seasonId, long episodeId);
 
-    void deleteEpisodeFromSeason(long seasonId, long episodeId);
+    void removeEpisodeFromSeason(long seasonId, long episodeId);
 }

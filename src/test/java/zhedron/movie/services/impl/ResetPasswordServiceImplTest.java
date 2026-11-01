@@ -99,7 +99,7 @@ class ResetPasswordServiceImplTest {
         assertSame(expectedResponse, result);
         assertEquals("new-hash", user.getPassword());
         verify(redis).delete("password:reset:reset-token");
-        verify(redis).delete("code:");
+        verify(redis).delete("code:neo@example.com");
         verify(redis).delete("verified:reset-token");
         verify(userRepository).save(user);
     }

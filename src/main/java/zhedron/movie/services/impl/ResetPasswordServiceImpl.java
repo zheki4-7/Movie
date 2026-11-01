@@ -89,7 +89,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
         user.setPassword(passwordEncoder.encode(newPassword));
 
         redis.delete(RESET_PREFIX + token);
-        redis.delete(CODE_PREFIX);
+        redis.delete(CODE_PREFIX + email);
         redis.delete(VERIFIED_PREFIX + token);
 
         User changedPasswordUser = userRepository.save(user);
@@ -121,16 +121,8 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     }
 
     private int generateCode() {
-        StringBuilder code = new StringBuilder();
+        Random random = new Random();
 
-        for (int i = 0; i < 4; i++) {
-            Random random = new Random();
-
-            int result = random.nextInt(0, 9);
-
-            code.append(String.valueOf(result));
-        }
-
-        return Integer.parseInt(code.toString());
+        return random.nextInt(1000, 10000);
     }
 }

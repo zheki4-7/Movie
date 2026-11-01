@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.apache.tika.Tika;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -67,7 +68,13 @@ public class EpisodeController {
             return ResponseEntity.badRequest().body(new MessageResponse("Video is required"));
         } else if (video.isEmpty()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Upload video file"));
-        } else if (!video.getContentType().equals("video/mp4")) {
+        }
+
+        Tika tika = new Tika();
+
+        String contentType = tika.detect(video.getInputStream());
+
+        if (!contentType.equals("video/mp4")) {
             return ResponseEntity.badRequest().body(new MessageResponse("Upload video file with mp4 format"));
         }
 

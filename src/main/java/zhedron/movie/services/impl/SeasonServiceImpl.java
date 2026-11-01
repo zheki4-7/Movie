@@ -91,7 +91,7 @@ public class SeasonServiceImpl implements SeasonService {
             @Cacheable(value = "seasons", key = "#seasonId"),
             @Cacheable(value = "episodes", key = "#episodeId")
     })
-    public void deleteEpisodeFromSeason(long seasonId, long episodeId) {
+    public void removeEpisodeFromSeason(long seasonId, long episodeId) {
         Season season = seasonRepository.findById(seasonId).orElseThrow(() -> new SeasonNotFoundException("Season not found with " + seasonId));
         Episode episode = episodeRepository.findById(episodeId).orElseThrow(() -> new EpisodeNotFoundException("Episode not found with " + episodeId));
 

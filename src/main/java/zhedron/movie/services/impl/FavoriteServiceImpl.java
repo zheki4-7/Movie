@@ -3,6 +3,7 @@ package zhedron.movie.services.impl;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import zhedron.movie.dto.response.FavoriteResponse;
 import zhedron.movie.dto.response.request.FavoriteRequest;
@@ -33,7 +34,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    @CachePut(value = "favorites", key = "result.id()")
+    @CachePut(value = "favorites", key = "#result.id()")
     public FavoriteResponse create(FavoriteRequest favoriteRequest) {
         User currentUser = userService.getCurrentUser();
 
@@ -92,7 +93,10 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    @Cacheable(value = "mediaContents", key = "#mediaId")
+    @Caching(cacheable = {
+            @Cacheable(value = "favorites", key = "#favoriteId"),
+            @Cacheable(value = "mediaContents", key = "#mediaId")
+    })
     public FavoriteResponse addMediaContentToFavorite(long favoriteId, long mediaId) {
         User currentUser = userService.getCurrentUser();
 

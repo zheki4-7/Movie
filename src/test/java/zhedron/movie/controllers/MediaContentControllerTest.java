@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Base64;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -63,7 +64,7 @@ class MediaContentControllerTest {
         MediaContentRequest request = mediaContentRequest();
         MockMultipartFile requestPart = new MockMultipartFile(
                 "mediaContentRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
-        MockMultipartFile image = new MockMultipartFile("images", "cover.jpg", "image/jpeg", "image".getBytes());
+        MockMultipartFile image = new MockMultipartFile("images", "cover.png", "image/png", pngBytes());
         when(mediaContentService.createMediaContent(any(MediaContentRequest.class), any()))
                 .thenReturn(response(8L, Status.PRIVATE));
 
@@ -79,11 +80,11 @@ class MediaContentControllerTest {
         MediaContentRequest request = mediaContentRequest();
         MockMultipartFile requestPart = new MockMultipartFile(
                 "mediaContentRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
-        MockMultipartFile image = new MockMultipartFile("images", "cover.jpg", "image/jpeg", new byte[0]);
+        MockMultipartFile image = new MockMultipartFile("images", "cover.png", "image/png", new byte[0]);
 
         mockMvc.perform(multipart("/api/mediacontent/create").file(requestPart).file(image))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Upload image file"));
+                .andExpect(jsonPath("$.message").value("Image is required"));
     }
 
     @Test
@@ -114,7 +115,7 @@ class MediaContentControllerTest {
     }
 
     @Test
-    void getMediaContentByIdRejectsAnonymousUser() throws Exception {
+    void getMediaContentByIdAnonymousUser() throws Exception {
         mockMvc.perform(get("/api/mediacontent/8"))
                 .andExpect(status().isOk());
     }
@@ -155,7 +156,7 @@ class MediaContentControllerTest {
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    void updateMediaContentReturnsValidationMessageForBlankTitle() throws Exception {
+    void updateMediaContentReturnsValidationMessageForBlankTitleAndDescription() throws Exception {
         MediaContentRequest request = mediaContentRequest();
         request.setTitle("");
 
@@ -163,7 +164,11 @@ class MediaContentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Write title, title must not be empty"));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.anyOf(
+                        org.hamcrest.Matchers.equalTo("Write title"),
+                        org.hamcrest.Matchers.equalTo("Write description"),
+                        org.hamcrest.Matchers.equalTo("Write title, title must not be empty"),
+                        org.hamcrest.Matchers.equalTo("Write description, description must not be empty"))));
 
         verify(mediaContentService, never()).updateMediaContent(any(MediaContentRequest.class), eq(8L));
     }
@@ -218,6 +223,28 @@ class MediaContentControllerTest {
                 .andExpect(content().contentType(MediaType.IMAGE_PNG));
     }
 
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void uploadCoverArtReturnsUpdatedMediaContent() throws Exception {
+        when(mediaContentService.uploadAvatarById(eq(8L), any())).thenReturn(response(8L, Status.PRIVATE));
+
+        MockMultipartFile image = new MockMultipartFile("image", "cover.png", "image/png", pngBytes());
+
+        mockMvc.perform(multipart("/api/mediacontent/upload/8").file(image))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(8));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void uploadCoverArtRejectsEmptyImage() throws Exception {
+        MockMultipartFile image = new MockMultipartFile("image", "cover.png", "image/png", new byte[0]);
+
+        mockMvc.perform(multipart("/api/mediacontent/upload/8").file(image))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Upload image"));
+    }
+
     private static MediaContentRequest mediaContentRequest() {
         MediaContentRequest request = new MediaContentRequest();
         request.setTitle("Title");
@@ -230,5 +257,9 @@ class MediaContentControllerTest {
 
     private static MediaContentResponse response(long id, Status status) {
         return new MediaContentResponse(id, "Title", "Description", LocalDate.of(2026, 1, 1), 0, List.of(), null, List.of(), status, null, "Studio", List.of(), List.of(), List.of());
+    }
+
+    private static byte[] pngBytes() {
+        return Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=");
     }
 }

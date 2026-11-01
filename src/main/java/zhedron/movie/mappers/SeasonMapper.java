@@ -8,6 +8,4 @@ import zhedron.movie.entity.Season;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = EpisodeMapper.class)
 public interface SeasonMapper {
     SeasonResponse toSeasonResponse(Season season);
-
-    Season toSeason(SeasonResponse seasonResponse);
 }

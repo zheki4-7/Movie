@@ -13,6 +13,7 @@ import zhedron.movie.config.SecurityConfig;
 import zhedron.movie.dto.response.SubtitleResponse;
 import zhedron.movie.entity.Subtitle;
 import zhedron.movie.exceptions.SrtFileParsingException;
+import zhedron.movie.exceptions.SubtitleNotFoundException;
 import zhedron.movie.mappers.SubtitleMapper;
 import zhedron.movie.repository.SubtitleRepository;
 import zhedron.movie.repository.UserRepository;
@@ -61,7 +62,7 @@ class SubtitleControllerTest {
     @Test
     void getSubtitleReturnsNotFoundWhenServiceCannotFindSubtitle() throws Exception {
         when(subtitleService.findById(404))
-                .thenThrow(new zhedron.movie.exceptions.SubtitleNotFoundException("Subtitle not found with 404"));
+                .thenThrow(new SubtitleNotFoundException("Subtitle not found with 404"));
 
         mockMvc.perform(get("/api/subtitle/404"))
                 .andExpect(status().isNotFound())

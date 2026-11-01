@@ -3,6 +3,7 @@ package zhedron.movie.services.impl;
 import org.springframework.stereotype.Service;
 import zhedron.movie.entity.RefreshToken;
 import zhedron.movie.entity.User;
+import zhedron.movie.exceptions.RefreshTokenExpiredException;
 import zhedron.movie.repository.RefreshTokenRepository;
 import zhedron.movie.repository.UserRepository;
 import zhedron.movie.services.RefreshTokenService;
@@ -44,6 +45,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public RefreshToken validateToken(RefreshToken refreshToken) {
         if (refreshToken.getExpiredAt().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(refreshToken);
+
+            throw new RefreshTokenExpiredException("Refresh token has expired");
         }
 
         return refreshToken;

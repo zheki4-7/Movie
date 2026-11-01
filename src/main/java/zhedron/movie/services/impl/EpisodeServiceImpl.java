@@ -59,7 +59,7 @@ public class EpisodeServiceImpl implements EpisodeService {
 
         String fileName = UUID.randomUUID().toString() + "_" + video.getOriginalFilename();
 
-        Path videoFile = Paths.get(DIRECTORY).resolve(fileName).normalize();
+        Path videoFile = path.resolve(fileName).normalize();
 
         Files.copy(video.getInputStream(), videoFile, StandardCopyOption.REPLACE_EXISTING);
 
