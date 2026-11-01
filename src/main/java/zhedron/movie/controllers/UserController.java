@@ -105,7 +105,8 @@ public class UserController {
                                     value = "{\"message\": \"User not found with 1\"}"
                             )
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<UserResponse> changeRole(@PathVariable long id, @RequestBody Role role) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.changeRole(id, role));

@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.dto.response.SubtitleResponse;
 import zhedron.movie.entity.Subtitle;
+import zhedron.movie.exceptions.EpisodeNotFoundException;
 import zhedron.movie.mappers.SubtitleMapper;
 import zhedron.movie.repository.SubtitleRepository;
 import zhedron.movie.services.SubtitleService;
@@ -59,7 +60,8 @@ public class SubtitleController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Subtitle deleted", content = @Content(schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "Subtitle not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    examples = @ExampleObject(value = "{\"message\": \"Subtitle not found with 1\"}")))
+                    examples = @ExampleObject(value = "{\"message\": \"Subtitle not found with 1\"}"))),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteSubtitle(@PathVariable int id) {
         subtitleService.deleteSubtitleById(id);
@@ -75,7 +77,8 @@ public class SubtitleController {
                     schema = @Schema(implementation = MessageResponse.class), examples = {
                     @ExampleObject(name = "Empty File", value = "{\"message\": \"Upload file\"}"),
                     @ExampleObject(name = "Invalid Format", value = "{\"message\": \"Upload srt file\"}")
-            }))
+            })),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> uploadFile(@RequestPart MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
@@ -111,12 +114,12 @@ public class SubtitleController {
     @Operation(summary = "Read episode subtitle cues", description = "Parses the SRT file linked to an episode and returns its timed subtitle cues.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Subtitle cues returned", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "404", description = "Episode or subtitle not found"),
+            @ApiResponse(responseCode = "404", description = "Episode or subtitle not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "500", description = "SRT file could not be parsed", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     examples = @ExampleObject(value = "{\"message\": \"Failed to read file\"}")))
     })
     public List<Map<String, Object>> getDataSrtEpisode(@PathVariable int episodeId) {
-        Subtitle subtitle = subtitleRepository.findByEpisodeId(episodeId);
+        Subtitle subtitle = subtitleRepository.findByEpisodeId(episodeId).orElseThrow(() -> new EpisodeNotFoundException("Episode not found with 1"));
 
         return subtitleService.getDataFromSrtFile(Path.of(subtitle.getSrtName()));
     }

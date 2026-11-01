@@ -57,7 +57,8 @@ public class SeasonController {
                                     value = "{\"message\": \"Enter a number\"}"
                             )
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> createSeason(@RequestBody @Valid SeasonCreateRequest seasonCreateRequest, BindingResult bindingResult) {
         if  (bindingResult.hasErrors()) {
@@ -95,7 +96,8 @@ public class SeasonController {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Season not found with 1\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteSeasonById(@PathVariable long id) {
         seasonService.deleteById(id);
@@ -154,7 +156,8 @@ public class SeasonController {
                                     @ExampleObject(name = "Episode Not Found", value = "{\"message\": \"Episode not found with 5\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<SeasonResponse> addEpisode(@RequestParam long seasonId, @RequestParam long episodeId) {
         return ResponseEntity.ok(seasonService.addEpisodeToSeason(seasonId, episodeId));
@@ -186,7 +189,8 @@ public class SeasonController {
                                     @ExampleObject(name = "Episode Not In Season", value = "{\"message\": \"Episode not found in Season\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> removeEpisodeFromSeason(@RequestParam long seasonId, @RequestParam long episodeId) {
         seasonService.removeEpisodeFromSeason(seasonId, episodeId);

@@ -61,7 +61,8 @@ public class EpisodeController {
                                     @ExampleObject(name = "Invalid Format", value = "{\"message\": \"Upload video file with mp4 format\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> uploadFile(@RequestPart MultipartFile video, @RequestPart @Valid EpisodeCreateRequest episodeCreateRequest) throws IOException {
         if (video == null) {
@@ -103,7 +104,8 @@ public class EpisodeController {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Episode not found with 1\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteEpisodeById(@PathVariable long id) {
         episodeService.deleteById(id);
@@ -165,6 +167,7 @@ public class EpisodeController {
             @ApiResponse(responseCode = "200", description = "Subtitle added", content = @Content(schema = @Schema(implementation = EpisodeResponse.class))),
             @ApiResponse(responseCode = "404", description = "Episode or subtitle not found"),
             @ApiResponse(responseCode = "400", description = "Subtitle already linked to episode")
+            ,@ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public EpisodeResponse addSubtitle(@PathVariable long subtitleId, @PathVariable long episodeId) {
         return episodeService.addSubtitleToEpisode(episodeId, subtitleId);
@@ -175,6 +178,7 @@ public class EpisodeController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Subtitle removed", content = @Content(schema = @Schema(implementation = EpisodeResponse.class))),
             @ApiResponse(responseCode = "404", description = "Episode, subtitle, or association not found")
+            ,@ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public EpisodeResponse removeSubtitle(@PathVariable long subtitleId, @PathVariable long episodeId) {
         return episodeService.removeSubtitleFromEpisode(episodeId, subtitleId);

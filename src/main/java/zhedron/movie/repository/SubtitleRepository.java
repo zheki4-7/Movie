@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import zhedron.movie.entity.Subtitle;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SubtitleRepository extends JpaRepository<Subtitle, Long> {
     @Query("SELECT s FROM Subtitle s WHERE s.released = false")
@@ -12,5 +13,5 @@ public interface SubtitleRepository extends JpaRepository<Subtitle, Long> {
 
     Subtitle findByFilmId(long filmId);
 
-    Subtitle findByEpisodeId(long episodeId);
+    Optional<Subtitle> findByEpisodeId(long episodeId);
 }

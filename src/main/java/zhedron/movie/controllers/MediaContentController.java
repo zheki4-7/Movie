@@ -72,7 +72,8 @@ public class MediaContentController {
                                     @ExampleObject(name = "Empty File", value = "{\"message\": \"Upload image file\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> createMediaContent(@Valid @RequestPart MediaContentRequest mediaContentRequest, BindingResult bindingResult, @RequestPart List<MultipartFile> images) throws IOException {
         if (bindingResult.hasErrors()) {
@@ -161,7 +162,8 @@ public class MediaContentController {
                             schema = @Schema(implementation = MessageResponse.class),
                             examples = @ExampleObject(name = "Invalid Request", value = "{\"message\": \"Write title, title must not be empty\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteMediaContentById(@PathVariable long id) {
         mediaContentService.deleteById(id);
@@ -190,7 +192,8 @@ public class MediaContentController {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Media Content not found with id 1\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MediaContentResponse> changeMediaContentVisibility(@PathVariable long id, @RequestParam Status status) {
         return ResponseEntity.ok(mediaContentService.changeVisibility(status, id));
@@ -228,7 +231,8 @@ public class MediaContentController {
                                     @ExampleObject(name = "Film Not Found", value = "{\"message\": \"Film not found with id 10\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MediaContentResponse> addFilmToMediaContent(@RequestParam long mediaContentId, @RequestParam long filmId) {
         return ResponseEntity.ok(mediaContentService.addFilmToMediaContent(mediaContentId, filmId));
@@ -266,7 +270,8 @@ public class MediaContentController {
                                     @ExampleObject(name = "Season Not Found", value = "{\"message\": \"Season not found with id 3\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MediaContentResponse> addSeasonToMediaContent(@RequestParam long mediaContentId, @RequestParam long seasonId) {
         return ResponseEntity.ok(mediaContentService.addSeasonToMediaContent(mediaContentId, seasonId));
@@ -298,7 +303,8 @@ public class MediaContentController {
                                     @ExampleObject(name = "Film Not In Media", value = "{\"message\": \"Film not found in Media Content\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> removeFilmFromMediaContent(@RequestParam long mediaContentId, @RequestParam long filmId) {
         mediaContentService.removeFilmFromMediaContent(mediaContentId, filmId);
@@ -332,7 +338,8 @@ public class MediaContentController {
                                     @ExampleObject(name = "Season Not In Media", value = "{\"message\": \"Seasons not found in Media Content\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> removeSeasonFromMediaContent(@RequestParam long mediaContentId, @RequestParam long seasonId) {
         mediaContentService.removeSeasonFromMediaContent(mediaContentId, seasonId);
@@ -364,7 +371,8 @@ public class MediaContentController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Authentication is required to update media content"
+                    description = "Authentication required",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -458,7 +466,8 @@ public class MediaContentController {
                             schema = @Schema(type = "object", implementation = Map.class),
                             examples = @ExampleObject(value = "{\"message\": \"Media Content not found with 1\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MediaContentResponse> addActorToMediaContent(@PathVariable long mediaContentId, @PathVariable long actorId) {
         return ResponseEntity.ok(mediaContentService.addActorToMediaContent(mediaContentId, actorId));
@@ -489,7 +498,8 @@ public class MediaContentController {
                                     @ExampleObject(name = "Actor Not Linked", value = "{\"message\": \"Actor not exists in Media Content\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MediaContentResponse> removeActorFromMediaContent(@PathVariable long mediaContentId, @PathVariable long actorId) {
         return ResponseEntity.ok(mediaContentService.removeActorFromMediaContent(mediaContentId, actorId));
@@ -550,7 +560,8 @@ public class MediaContentController {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "Media content not found",
-            content = @Content(schema = @Schema(implementation = MessageResponse.class)))
+            content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> uploadAvatar(@RequestPart MultipartFile image, @PathVariable long id) throws IOException {
         if (image == null || image.isEmpty()) {

@@ -63,7 +63,7 @@ public class FavoriteController {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> createFavorite(@Valid @RequestBody FavoriteRequest favoriteRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -85,7 +85,7 @@ public class FavoriteController {
             @ApiResponse(responseCode = "200", description = "Favorite list updated", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FavoriteResponse.class))),
             @ApiResponse(responseCode = "400", description = "Favorite name is missing or blank", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = Map.class), examples = @ExampleObject(value = "{\"message\": \"Name must not be empty\"}"))),
             @ApiResponse(responseCode = "404", description = "Favorite list not found or is not owned by the authenticated user", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"message\": \"Favorite not found\"}"))),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> updateFavorite(@PathVariable long id, @Valid @RequestBody FavoriteRequest favoriteRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -106,7 +106,7 @@ public class FavoriteController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Favorite list retrieved", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FavoriteResponse.class))),
             @ApiResponse(responseCode = "404", description = "Favorite list not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"message\": \"Favorite not found with 1\"}"))),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<FavoriteResponse> getFavorite(@PathVariable long id) {
         Favorite favoriteFound = favoriteService.findById(id);
@@ -119,7 +119,7 @@ public class FavoriteController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Favorite list deleted", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"message\": \"Favorite deleted successfully\"}"))),
             @ApiResponse(responseCode = "404", description = "Favorite list not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = "{\"message\": \"Favorite not found\"}"))),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteFavorite(@PathVariable long id) {
         favoriteService.deleteFavorite(id);
@@ -144,7 +144,7 @@ public class FavoriteController {
                     )
             })),
             @ApiResponse(responseCode = "400", description = "Media content already exists in favorite", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = "{\"message\": \"Media Content exist in favorite\"}"))),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<FavoriteResponse>  addMediaContentToFavorite(@PathVariable long favoriteId, @PathVariable long mediaId) {
         return ResponseEntity.ok(favoriteService.addMediaContentToFavorite(favoriteId, mediaId));
@@ -166,7 +166,7 @@ public class FavoriteController {
                             description = "Triggered if media not found"
                     )
             })),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<FavoriteResponse> removeMediaContentFromFavorite(@PathVariable long favoriteId, @PathVariable long mediaId) {
         return ResponseEntity.ok(favoriteService.removeMediaContentFromFavorite(favoriteId, mediaId));
@@ -197,7 +197,7 @@ public class FavoriteController {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public FavoriteResponse getFavoriteByName(@RequestParam String name) {
         return favoriteService.getFavoriteByName(name);

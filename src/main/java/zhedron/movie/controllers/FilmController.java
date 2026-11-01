@@ -59,7 +59,8 @@ public class FilmController {
                                     @ExampleObject(name = "Invalid Format", value = "{\"message\": \"Upload video file with mp4 format\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> uploadFilm(
             @RequestPart MultipartFile video) throws IOException {
@@ -102,7 +103,8 @@ public class FilmController {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Film not found with id 1\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteById(@PathVariable long id) {
         filmService.deleteById(id);
@@ -164,6 +166,7 @@ public class FilmController {
             @ApiResponse(responseCode = "200", description = "Subtitle added", content = @Content(schema = @Schema(implementation = FilmResponse.class))),
             @ApiResponse(responseCode = "404", description = "Film or subtitle not found"),
             @ApiResponse(responseCode = "400", description = "Subtitle already linked to film")
+            ,@ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public FilmResponse addSubtitle(@PathVariable long subtitleId, @PathVariable long filmId) {
         return filmService.addSubtitleToFilm(subtitleId, filmId);
@@ -174,6 +177,7 @@ public class FilmController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Subtitle removed", content = @Content(schema = @Schema(implementation = FilmResponse.class))),
             @ApiResponse(responseCode = "404", description = "Film, subtitle, or association not found")
+            ,@ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public FilmResponse removeSubtitle(@PathVariable long subtitleId, @PathVariable long filmId) {
         return filmService.removeSubtitleFromFilm(subtitleId, filmId);

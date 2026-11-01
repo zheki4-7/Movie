@@ -57,7 +57,7 @@ public class ResetPasswordController {
     @Operation(summary = "Reset a user password", description = "Changes the password after the reset token and verification code have been validated.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Password changed", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Reset code has not been verified or the new password matches the current password", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Reset code has not been verified or the new password matches the current password", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "Reset token or user was not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class)))
     })
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest, BindingResult bindingResult, @RequestParam String token) {

@@ -76,7 +76,8 @@ public class ActorController {
                                     @ExampleObject(name = "Invalid Image Type", value = "{\"message\": \"Invalid image type\"}")
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> createActor(@Valid @RequestPart ActorRequest actorRequest, BindingResult bindingResult, @RequestPart List<MultipartFile> images) throws IOException {
         if (bindingResult.hasErrors()) {
@@ -206,7 +207,8 @@ public class ActorController {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Actor not found with 1\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteActorById(@PathVariable long actorId) {
         actorService.deleteById(actorId);
@@ -235,7 +237,8 @@ public class ActorController {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(name = "Not Found", value = "{\"message\": \"Actor not found with 1\"}")
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<ActorResponse> updateActorById(@PathVariable long actorId, @RequestBody ActorRequest actorRequest) {
         return ResponseEntity.ok(actorService.updateActor(actorRequest, actorId));
@@ -253,7 +256,8 @@ public class ActorController {
             @ApiResponse(responseCode = "400", description = "Missing, empty, or unsupported image",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Actor not found")
+            @ApiResponse(responseCode = "404", description = "Actor not found", content = @Content(schema = @Schema(type = "object", example = "{\"message\": \"Actor not found with 1\"}"))),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> uploadPhoto(@RequestPart MultipartFile image, @PathVariable long id) throws IOException {
         if (image == null || image.isEmpty()) {

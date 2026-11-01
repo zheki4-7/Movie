@@ -80,7 +80,8 @@ public class CommentController {
                                     value = "{\"message\": \"You are not allowed to edit this comment\"}"
                             )
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<?> createComment(@Valid @RequestBody CommentRequest commentRequest, BindingResult bindingResult, @PathVariable long mediaContentId) {
         if (bindingResult.hasErrors()) {
@@ -126,7 +127,8 @@ public class CommentController {
                                     )
                             }
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<CommentResponse> findById(@PathVariable long id, @PathVariable long mediaContentId) {
         return new ResponseEntity<>(commentService.findById(id, mediaContentId), HttpStatus.OK);
@@ -171,7 +173,8 @@ public class CommentController {
                                     value = "{\"message\": \"Comment not found with 1\"}"
                             )
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     public ResponseEntity<MessageResponse> deleteComment(@PathVariable long id) {
         commentService.deleteComment(id);
