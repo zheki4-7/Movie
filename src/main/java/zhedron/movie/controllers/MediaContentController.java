@@ -549,7 +549,8 @@ public class MediaContentController {
             @ApiResponse(responseCode = "400", description = "Missing, empty, or unsupported image",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = MessageResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Media content not found")
+            @ApiResponse(responseCode = "404", description = "Media content not found",
+            content = @Content(schema = @Schema(implementation = MessageResponse.class)))
     })
     public ResponseEntity<?> uploadAvatar(@RequestPart MultipartFile image, @PathVariable long id) throws IOException {
         if (image == null || image.isEmpty()) {
