@@ -416,4 +416,28 @@ public class MediaContentServiceImpl implements MediaContentService {
 
         return mediaContentMapper.toMediaContentResponse(uploadedMedia);
     }
+
+    @Override
+    public PaginatedResponse findByTitle(int page, int size, String title) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("releaseDate").descending());
+
+        Page<MediaContent> pageMediaContents = mediaContentRepository.findByTitleContaining(title, pageable);
+
+        List<MediaContent> mediaContents = pageMediaContents.getContent().stream()
+                .filter(mediaContent -> mediaContent.getStatus().equals(Status.PUBLIC)).toList();
+
+        List<MediaContentResponse> mediaContentResponses = mediaContentMapper.toMediaContentResponse(mediaContents);
+
+        return new PaginatedResponse(
+                mediaContentResponses,
+                page,
+                size,
+                pageMediaContents.hasNext(),
+                pageMediaContents.hasPrevious(),
+                pageMediaContents.getTotalElements(),
+                pageMediaContents.getTotalPages(),
+                pageMediaContents.isFirst(),
+                pageMediaContents.isLast()
+        );
+    }
 }

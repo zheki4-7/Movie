@@ -38,4 +38,6 @@ public interface MediaContentService {
     MediaContentResponse removeActorFromMediaContent(long mediaContentId, long actorId);
 
     MediaContentResponse uploadAvatarById(long id, MultipartFile image) throws IOException;
+
+    PaginatedResponse findByTitle(int page, int size, String title);
 }

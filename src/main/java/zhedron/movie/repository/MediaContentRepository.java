@@ -18,4 +18,6 @@ public interface MediaContentRepository extends JpaRepository<MediaContent, Long
     Page<MediaContent> findByReleaseDateBetween(Pageable pageable, LocalDate start, LocalDate end);
 
     MediaContent findByFilm(Film film);
+
+    Page<MediaContent> findByTitleContaining(String title, Pageable pageable);
 }

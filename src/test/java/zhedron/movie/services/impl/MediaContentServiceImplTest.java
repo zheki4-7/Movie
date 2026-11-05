@@ -6,6 +6,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.PageImpl;
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -134,6 +136,32 @@ class MediaContentServiceImplTest {
         assertEquals(2, response.totalElements());
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(mediaContentRepository).findAll(pageableCaptor.capture());
+        assertEquals("releaseDate: DESC", pageableCaptor.getValue().getSort().toString());
+    }
+
+    @Test
+    void findByTitleReturnsOnlyPublicMappedPaginatedResults() {
+        MediaContent publicMediaContent = mediaContent(9L, Status.PUBLIC);
+        MediaContent privateMediaContent = mediaContent(10L, Status.PRIVATE);
+        MediaContentResponse mediaContentResponse = response(9L, Status.PUBLIC);
+        PageImpl<MediaContent> page = new PageImpl<>(List.of(publicMediaContent, privateMediaContent),
+                PageRequest.of(1, 5), 6);
+        when(mediaContentRepository.findByTitleContaining(eq("matrix"), any(Pageable.class))).thenReturn(page);
+        when(mediaContentMapper.toMediaContentResponse(List.of(publicMediaContent)))
+                .thenReturn(List.of(mediaContentResponse));
+
+        PaginatedResponse result = mediaContentService.findByTitle(1, 5, "matrix");
+
+        assertEquals(List.of(mediaContentResponse), result.mediaContentResponses());
+        assertEquals(1, result.page());
+        assertEquals(5, result.size());
+        assertEquals(7, result.totalElements());
+        assertEquals(2, result.totalPages());
+        assertTrue(result.hasPrevious());
+        assertTrue(result.last());
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(mediaContentRepository).findByTitleContaining(eq("matrix"), pageableCaptor.capture());
+        verify(mediaContentMapper).toMediaContentResponse(List.of(publicMediaContent));
         assertEquals("releaseDate: DESC", pageableCaptor.getValue().getSort().toString());
     }
 

@@ -145,6 +145,25 @@ class MediaContentControllerTest {
     }
 
     @Test
+    void searchMediaContentsByTitleUsesPaginationAndReturnsResults() throws Exception {
+        PaginatedResponse page = new PaginatedResponse(
+                List.of(response(8L, Status.PUBLIC)), 1, 5, false, true, 6, 2, false, true);
+        when(mediaContentService.findByTitle(1, 5, "matrix")).thenReturn(page);
+
+        mockMvc.perform(get("/api/mediacontent/search")
+                        .param("page", "1")
+                        .param("size", "5")
+                        .param("title", "matrix"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(6))
+                .andExpect(jsonPath("$.mediaContentResponses[0].id").value(8));
+
+        verify(mediaContentService).findByTitle(1, 5, "matrix");
+    }
+
+    @Test
     @WithMockUser(authorities = "ADMIN")
     void deleteMediaContentReturnsMessage() throws Exception {
         mockMvc.perform(delete("/api/mediacontent/delete/8"))

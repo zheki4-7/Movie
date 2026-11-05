@@ -578,4 +578,21 @@ public class MediaContentController {
 
         return ResponseEntity.ok(mediaContentService.uploadAvatarById(id, image));
     }
+
+    @GetMapping("/search")
+    @Operation(
+            summary = "Search media contents by title",
+            description = "Returns a paginated list of public media contents whose title matches the supplied search text, ordered by release date descending."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Matching media contents retrieved successfully",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PaginatedResponse.class)
+            )
+    )
+    public ResponseEntity<PaginatedResponse> findByTitle(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam String title) {
+        return ResponseEntity.ok(mediaContentService.findByTitle(page, size, title));
+    }
 }
