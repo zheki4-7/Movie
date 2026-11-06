@@ -319,11 +319,9 @@ public class MediaContentServiceImpl implements MediaContentService {
     public PaginatedResponse findAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("releaseDate").descending());
 
-        Page<MediaContent> pageMediaContent = mediaContentRepository.findAll(pageable);
+        Page<MediaContent> pageMediaContent = mediaContentRepository.findAllByStatus(pageable, Status.PUBLIC);
 
-        List<MediaContent> mediaContents = pageMediaContent.getContent()
-                .stream()
-                .filter(mediaContent -> mediaContent.getStatus().equals(Status.PUBLIC)).toList();
+        List<MediaContent> mediaContents = pageMediaContent.getContent();
 
         List<MediaContentResponse> mediaContentResponses = mediaContentMapper.toMediaContentResponse(mediaContents);
 
@@ -344,11 +342,9 @@ public class MediaContentServiceImpl implements MediaContentService {
     public PaginatedResponse getMediaContentsBetweenStartReleaseDateAndEndReleaseDate(int page, int size, LocalDate startReleaseDate, LocalDate endReleaseDate) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("releaseDate").descending());
 
-        Page<MediaContent> pageMediaContent = mediaContentRepository.findByReleaseDateBetween(pageable, startReleaseDate, endReleaseDate);
+        Page<MediaContent> pageMediaContent = mediaContentRepository.findByReleaseDateBetweenAndStatus(pageable, startReleaseDate, endReleaseDate, Status.PUBLIC);
 
-        List<MediaContent> mediaContents = pageMediaContent.getContent()
-                .stream()
-                .filter(mediaContent -> mediaContent.getStatus().equals(Status.PUBLIC)).toList();
+        List<MediaContent> mediaContents = pageMediaContent.getContent();
 
         List<MediaContentResponse> mediaContentResponses = mediaContentMapper.toMediaContentResponse(mediaContents);
 
@@ -421,10 +417,9 @@ public class MediaContentServiceImpl implements MediaContentService {
     public PaginatedResponse findByTitle(int page, int size, String title) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("releaseDate").descending());
 
-        Page<MediaContent> pageMediaContents = mediaContentRepository.findByTitleContaining(title, pageable);
+        Page<MediaContent> pageMediaContents = mediaContentRepository.findByTitleContainingAndStatus(title, Status.PUBLIC, pageable);
 
-        List<MediaContent> mediaContents = pageMediaContents.getContent().stream()
-                .filter(mediaContent -> mediaContent.getStatus().equals(Status.PUBLIC)).toList();
+        List<MediaContent> mediaContents = pageMediaContents.getContent();
 
         List<MediaContentResponse> mediaContentResponses = mediaContentMapper.toMediaContentResponse(mediaContents);
 

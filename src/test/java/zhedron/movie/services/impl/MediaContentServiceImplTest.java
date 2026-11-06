@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -124,29 +125,50 @@ class MediaContentServiceImplTest {
     @Test
     void findAllReturnsOnlyPublicItemsButKeepsPageMetadata() {
         MediaContent publicMedia = mediaContent(1L, Status.PUBLIC);
-        MediaContent privateMedia = mediaContent(2L, Status.PRIVATE);
         MediaContentResponse publicResponse = response(1L, Status.PUBLIC);
-        when(mediaContentRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(publicMedia, privateMedia)));
+        when(mediaContentRepository.findAllByStatus(any(Pageable.class), eq(Status.PUBLIC)))
+                .thenReturn(new PageImpl<>(List.of(publicMedia)));
         when(mediaContentMapper.toMediaContentResponse(List.of(publicMedia))).thenReturn(List.of(publicResponse));
 
         PaginatedResponse response = mediaContentService.findAll(0, 10);
 
         assertEquals(List.of(publicResponse), response.mediaContentResponses());
         assertEquals(0, response.page());
-        assertEquals(2, response.totalElements());
+        assertEquals(1, response.totalElements());
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(mediaContentRepository).findAll(pageableCaptor.capture());
+        verify(mediaContentRepository).findAllByStatus(pageableCaptor.capture(), eq(Status.PUBLIC));
         assertEquals("releaseDate: DESC", pageableCaptor.getValue().getSort().toString());
+    }
+
+    @Test
+    void findByReleaseDateRangeReturnsPublicPaginatedResults() {
+        LocalDate start = LocalDate.of(2026, 1, 1);
+        LocalDate end = LocalDate.of(2026, 12, 31);
+        MediaContent mediaContent = mediaContent(11L, Status.PUBLIC);
+        MediaContentResponse mediaContentResponse = response(11L, Status.PUBLIC);
+        when(mediaContentRepository.findByReleaseDateBetweenAndStatus(
+                any(Pageable.class), eq(start), eq(end), eq(Status.PUBLIC)))
+                .thenReturn(new PageImpl<>(List.of(mediaContent)));
+        when(mediaContentMapper.toMediaContentResponse(List.of(mediaContent)))
+                .thenReturn(List.of(mediaContentResponse));
+
+        PaginatedResponse result = mediaContentService
+                .getMediaContentsBetweenStartReleaseDateAndEndReleaseDate(0, 10, start, end);
+
+        assertEquals(List.of(mediaContentResponse), result.mediaContentResponses());
+        assertEquals(1, result.totalElements());
+        verify(mediaContentRepository).findByReleaseDateBetweenAndStatus(
+                any(Pageable.class), eq(start), eq(end), eq(Status.PUBLIC));
     }
 
     @Test
     void findByTitleReturnsOnlyPublicMappedPaginatedResults() {
         MediaContent publicMediaContent = mediaContent(9L, Status.PUBLIC);
-        MediaContent privateMediaContent = mediaContent(10L, Status.PRIVATE);
         MediaContentResponse mediaContentResponse = response(9L, Status.PUBLIC);
-        PageImpl<MediaContent> page = new PageImpl<>(List.of(publicMediaContent, privateMediaContent),
+        PageImpl<MediaContent> page = new PageImpl<>(List.of(publicMediaContent),
                 PageRequest.of(1, 5), 6);
-        when(mediaContentRepository.findByTitleContaining(eq("matrix"), any(Pageable.class))).thenReturn(page);
+        when(mediaContentRepository.findByTitleContainingAndStatus(
+                eq("matrix"), eq(Status.PUBLIC), any(Pageable.class))).thenReturn(page);
         when(mediaContentMapper.toMediaContentResponse(List.of(publicMediaContent)))
                 .thenReturn(List.of(mediaContentResponse));
 
@@ -155,12 +177,13 @@ class MediaContentServiceImplTest {
         assertEquals(List.of(mediaContentResponse), result.mediaContentResponses());
         assertEquals(1, result.page());
         assertEquals(5, result.size());
-        assertEquals(7, result.totalElements());
+        assertEquals(6, result.totalElements());
         assertEquals(2, result.totalPages());
         assertTrue(result.hasPrevious());
         assertTrue(result.last());
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(mediaContentRepository).findByTitleContaining(eq("matrix"), pageableCaptor.capture());
+        verify(mediaContentRepository).findByTitleContainingAndStatus(
+                eq("matrix"), eq(Status.PUBLIC), pageableCaptor.capture());
         verify(mediaContentMapper).toMediaContentResponse(List.of(publicMediaContent));
         assertEquals("releaseDate: DESC", pageableCaptor.getValue().getSort().toString());
     }
